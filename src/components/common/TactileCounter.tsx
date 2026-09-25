@@ -8,6 +8,10 @@ export interface TactileCounterProps {
   readonly draggable?: boolean;
   readonly onClick?: () => void;
   readonly onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
+  readonly onDragEnd?: (e: React.DragEvent<HTMLDivElement>) => void;
+  readonly onTouchStart?: (e: React.TouchEvent<HTMLDivElement>) => void;
+  readonly onTouchMove?: (e: React.TouchEvent<HTMLDivElement>) => void;
+  readonly onTouchEnd?: (e: React.TouchEvent<HTMLDivElement>) => void;
   readonly className?: string;
   readonly isGhost?: boolean;
   readonly animated?: boolean;
@@ -26,6 +30,10 @@ export function TactileCounter({
   draggable = false,
   onClick,
   onDragStart,
+  onDragEnd,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   className = '',
   isGhost = false,
   animated = true,
@@ -46,6 +54,10 @@ export function TactileCounter({
       aria-label={`${color} tactile counter chip`}
       draggable={draggable}
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       onClick={onClick}
       className={`relative rounded-full select-none ${sizeClass} ${
         isGhost ? 'opacity-40 border-2 border-dashed border-slate-400' : 'shadow-md'

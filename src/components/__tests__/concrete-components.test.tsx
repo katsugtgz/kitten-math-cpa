@@ -114,5 +114,50 @@ describe('Concrete Manipulative Components', () => {
         color: 'red',
       });
     });
+
+    it('supports moving counter from one slot to another via drag-and-drop', () => {
+      const mockGrid: DomainTenFrameGrid = {
+        capacity: 10,
+        cells: ['red', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
+        redCount: 1,
+        blackCount: 0,
+        totalCount: 1,
+      };
+
+      const handleMove = vi.fn();
+      render(<TenFrameGrid grid={mockGrid} onMoveCounter={handleMove} />);
+
+      const slot2 = screen.getByLabelText('Slot 2: empty');
+      fireEvent.drop(slot2, {
+        dataTransfer: {
+          getData: (key: string) => (key === 'source-index' ? '0' : 'red'),
+        },
+      });
+
+      expect(handleMove).toHaveBeenCalledWith(0, 1);
+    });
+
+    it('removes counter when dropped into PaperTray basin', () => {
+      const handleRemove = vi.fn();
+      render(
+        <PaperTray
+          selectedColor="red"
+          onSelectColor={vi.fn()}
+          currentCount={1}
+          capacity={10}
+          onClearFrame={vi.fn()}
+          onRemoveCounter={handleRemove}
+        />
+      );
+
+      const basin = screen.getByTestId('paper-tray-basin');
+      fireEvent.drop(basin, {
+        dataTransfer: {
+          getData: (key: string) => (key === 'source-index' ? '3' : ''),
+        },
+      });
+
+      expect(handleRemove).toHaveBeenCalledWith(3);
+    });
   });
 });

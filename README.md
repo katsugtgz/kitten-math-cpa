@@ -110,8 +110,8 @@ Every layer of the application is validated with rigorous test coverage:
 
 | Gate | Tool | Status | Metrics |
 |---|---|---|---|
-| **Unit & Integration** | Vitest + React Testing Library | ✅ Passing | 192 tests across 18 test suites |
-| **End-to-End (E2E)** | Playwright (Chromium) | ✅ Passing | 20 comprehensive E2E tests |
+| **Unit & Integration** | Vitest + React Testing Library | ✅ Passing | 206 tests across 18 test suites |
+| **End-to-End (E2E)** | Playwright (Chromium) | ✅ Passing | 21 comprehensive E2E tests |
 | **Architecture Audit** | React Doctor | ✅ 100 / 100 | 0 errors, 0 warnings (`--blocking warning`) |
 | **Linting** | ESLint 9 | ✅ Passing | 0 errors, 0 warnings (`--max-warnings 0`) |
 | **Type Safety** | TypeScript 5.7 (`strict`) | ✅ Passing | 0 diagnostics (`--noEmit`) |

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import type { TenFrameGrid as DomainTenFrameGrid, CounterColor } from '../../domain/types';
 import { TactileCounter } from '../common/TactileCounter';
 
@@ -7,8 +7,13 @@ export interface TenFrameGridProps {
   readonly selectedColor?: CounterColor;
   readonly onSlotClick?: (index: number) => void;
   readonly onDropCounter?: (index: number, color: CounterColor) => void;
+  readonly onMoveCounter?: (fromIndex: number, toIndex: number) => void;
+  readonly externalDragOverIndex?: number | null;
   readonly className?: string;
   readonly interactive?: boolean;
+  readonly onTouchStartCounter?: (e: React.TouchEvent, color: CounterColor, slotIndex: number) => void;
+  readonly onTouchMoveCounter?: (e: React.TouchEvent, color: CounterColor, slotIndex: number) => void;
+  readonly onTouchEndCounter?: (e: React.TouchEvent, color: CounterColor, slotIndex: number) => void;
 }
 
 export function TenFrameGrid({
@@ -16,10 +21,19 @@ export function TenFrameGrid({
   selectedColor = 'red',
   onSlotClick,
   onDropCounter,
+  onMoveCounter,
+  externalDragOverIndex = null,
   className = '',
   interactive = true,
+  onTouchStartCounter,
+  onTouchMoveCounter,
+  onTouchEndCounter,
 }: TenFrameGridProps): React.JSX.Element {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const justDroppedIndexRef = useRef<number | null>(null);
+  const isDraggingSlotRef = useRef<number | null>(null);
+
+  const activeHoverIndex = dragOverIndex ?? externalDragOverIndex;
 
   const frame1Indices = Array.from({ length: 10 }, (_, i) => i);
   const frame2Indices =
@@ -28,7 +42,7 @@ export function TenFrameGrid({
   const handleDragOver = (e: React.DragEvent, index: number): void => {
     if (!interactive) return;
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    e.dataTransfer.dropEffect = e.dataTransfer.effectAllowed === 'move' ? 'move' : 'copy';
     if (dragOverIndex !== index) {
       setDragOverIndex(index);
     }
@@ -44,7 +58,40 @@ export function TenFrameGrid({
     if (!interactive) return;
     e.preventDefault();
     setDragOverIndex(null);
-    const color = (e.dataTransfer.getData('text/plain') as CounterColor) || selectedColor;
+
+    justDroppedIndexRef.current = index;
+    setTimeout(() => {
+      if (justDroppedIndexRef.current === index) {
+        justDroppedIndexRef.current = null;
+      }
+    }, 150);
+
+    const plainText = e.dataTransfer.getData('text/plain');
+    const sourceIndexStr = e.dataTransfer.getData('source-index');
+
+    let color: CounterColor = selectedColor;
+    let sourceIndex: number | undefined;
+
+    if (plainText.startsWith('counter:')) {
+      const parts = plainText.split(':');
+      color = parts[1] as CounterColor;
+      sourceIndex = parseInt(parts[2], 10);
+    } else if (sourceIndexStr !== '') {
+      sourceIndex = parseInt(sourceIndexStr, 10);
+      if (plainText === 'red' || plainText === 'black') {
+        color = plainText;
+      }
+    } else if (plainText === 'red' || plainText === 'black') {
+      color = plainText;
+    }
+
+    if (sourceIndex !== undefined && !isNaN(sourceIndex) && sourceIndex !== index) {
+      if (onMoveCounter) {
+        onMoveCounter(sourceIndex, index);
+        return;
+      }
+    }
+
     if (color === 'red' || color === 'black') {
       if (onDropCounter) {
         onDropCounter(index, color);
@@ -75,15 +122,20 @@ export function TenFrameGrid({
           {indices.map((index) => {
             const cellState = grid.cells[index];
             const isOccupied = cellState !== 'empty';
-            const isHovered = dragOverIndex === index;
+            const isHovered = activeHoverIndex === index;
 
             return (
               <button
                 key={`grid-slot-${index}`}
                 type="button"
+                data-slot-index={index}
                 aria-label={`Slot ${index + 1}: ${cellState}`}
                 disabled={!interactive}
-                onClick={() => onSlotClick?.(index)}
+                onClick={() => {
+                  if (justDroppedIndexRef.current === index) return;
+                  if (isDraggingSlotRef.current === index) return;
+                  onSlotClick?.(index);
+                }}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragLeave={() => handleDragLeave(index)}
                 onDrop={(e) => handleDrop(e, index)}
@@ -107,6 +159,31 @@ export function TenFrameGrid({
                   <TactileCounter
                     color={cellState as CounterColor}
                     size="md"
+                    interactive
+                    draggable={interactive}
+                    onDragStart={(e) => {
+                      e.stopPropagation();
+                      isDraggingSlotRef.current = index;
+                      e.dataTransfer.setData('text/plain', `counter:${cellState}:${index}`);
+                      e.dataTransfer.setData('source-index', String(index));
+                      e.dataTransfer.effectAllowed = 'all';
+                    }}
+                    onDragEnd={() => {
+                      setTimeout(() => {
+                        if (isDraggingSlotRef.current === index) {
+                          isDraggingSlotRef.current = null;
+                        }
+                      }, 150);
+                    }}
+                    onTouchStart={(e) =>
+                      onTouchStartCounter?.(e, cellState as CounterColor, index)
+                    }
+                    onTouchMove={(e) =>
+                      onTouchMoveCounter?.(e, cellState as CounterColor, index)
+                    }
+                    onTouchEnd={(e) =>
+                      onTouchEndCounter?.(e, cellState as CounterColor, index)
+                    }
                     animated
                   />
                 )}

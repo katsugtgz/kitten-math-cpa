@@ -6,6 +6,7 @@ export interface ISoundService {
   playTryAgain(): void;
   playCelebrationFanfare(): void;
   playButtonClick(): void;
+  triggerHaptic(pattern?: number | number[]): void;
   setMuted(muted: boolean): void;
   getMuted(): boolean;
 }
@@ -39,6 +40,21 @@ export class SoundSynthesizer implements ISoundService {
       }
     } catch {
       // Ignore storage errors in restricted contexts
+    }
+  }
+
+  public triggerHaptic(pattern: number | number[] = 15): void {
+    if (this.isMuted) return;
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        'vibrate' in navigator &&
+        typeof navigator.vibrate === 'function'
+      ) {
+        navigator.vibrate(pattern);
+      }
+    } catch {
+      // Ignore unsupported or vibration permission errors in restricted contexts
     }
   }
 
@@ -102,6 +118,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playCounterPlace(isRed: boolean = true): void {
+    this.triggerHaptic(15);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -160,6 +177,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playCounterRemove(): void {
+    this.triggerHaptic(10);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -188,6 +206,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playCardFlip(): void {
+    this.triggerHaptic(15);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -223,6 +242,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playCorrect(streak: number = 1): void {
+    this.triggerHaptic([30, 40, 30]);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -270,6 +290,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playTryAgain(): void {
+    this.triggerHaptic([40, 60, 40]);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -297,6 +318,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playCelebrationFanfare(): void {
+    this.triggerHaptic([50, 50, 50, 50, 100]);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;
@@ -360,6 +382,7 @@ export class SoundSynthesizer implements ISoundService {
   }
 
   public playButtonClick(): void {
+    this.triggerHaptic(8);
     if (this.isMuted) return;
     const ctx = this.initAudioContext();
     if (!ctx || !this.masterGain) return;

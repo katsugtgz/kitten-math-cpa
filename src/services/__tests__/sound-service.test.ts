@@ -70,4 +70,40 @@ describe('SoundSynthesizer', () => {
 
     expect(createOscSpy).not.toHaveBeenCalled();
   });
+
+  it('triggers navigator.vibrate haptic feedback on sound events', () => {
+    const vibrateSpy = vi.spyOn(navigator, 'vibrate');
+    vibrateSpy.mockClear();
+
+    soundService.playCounterPlace(true);
+    expect(vibrateSpy).toHaveBeenCalledWith(15);
+
+    soundService.playCounterRemove();
+    expect(vibrateSpy).toHaveBeenCalledWith(10);
+
+    soundService.playCorrect(1);
+    expect(vibrateSpy).toHaveBeenCalledWith([30, 40, 30]);
+
+    soundService.playTryAgain();
+    expect(vibrateSpy).toHaveBeenCalledWith([40, 60, 40]);
+
+    soundService.playCelebrationFanfare();
+    expect(vibrateSpy).toHaveBeenCalledWith([50, 50, 50, 50, 100]);
+
+    soundService.playButtonClick();
+    expect(vibrateSpy).toHaveBeenCalledWith(8);
+  });
+
+  it('does not trigger haptic feedback when muted', () => {
+    soundService.setMuted(true);
+    const vibrateSpy = vi.spyOn(navigator, 'vibrate');
+    vibrateSpy.mockClear();
+
+    soundService.playCounterPlace(true);
+    soundService.playCounterRemove();
+    soundService.playCorrect(1);
+    soundService.triggerHaptic(20);
+
+    expect(vibrateSpy).not.toHaveBeenCalled();
+  });
 });

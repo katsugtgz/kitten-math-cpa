@@ -167,6 +167,32 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       });
     }
 
+    case 'MOVE_COUNTER': {
+      const { fromIndex, toIndex } = action;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= state.grid.capacity ||
+        toIndex < 0 ||
+        toIndex >= state.grid.capacity ||
+        fromIndex === toIndex
+      ) {
+        return state;
+      }
+      const sourceCell = state.grid.cells[fromIndex];
+      if (sourceCell === 'empty') {
+        return state;
+      }
+      let tempGrid = removeCounter(state.grid, fromIndex);
+      if (tempGrid.cells[toIndex] !== 'empty') {
+        tempGrid = removeCounter(tempGrid, toIndex);
+      }
+      const newGrid = placeCounter(tempGrid, sourceCell, toIndex);
+      return Object.freeze({
+        ...state,
+        grid: newGrid,
+      });
+    }
+
     case 'CLEAR_FRAME': {
       // If frame is already empty, return state unchanged
       if (state.grid.totalCount === 0) {

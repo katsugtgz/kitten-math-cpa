@@ -88,6 +88,7 @@ export interface GameState {
 export type GameAction =
   | { type: 'PLACE_COUNTER'; slotIndex: number; color: CounterColor }
   | { type: 'REMOVE_COUNTER'; slotIndex: number }
+  | { type: 'MOVE_COUNTER'; fromIndex: number; toIndex: number }
   | { type: 'CLEAR_FRAME' }
   | { type: 'SET_CAPACITY'; capacity: FrameCapacity }
   | { type: 'SUBMIT_ANSWER'; answer: number; bonus?: number }

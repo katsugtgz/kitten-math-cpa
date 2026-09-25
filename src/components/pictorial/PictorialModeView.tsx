@@ -53,15 +53,18 @@ export function PictorialModeView({
   dispatch,
 }: PictorialModeViewProps): React.JSX.Element {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
   const activeProblem = state.activeProblem as SubitizeProblem | null;
   const isAnswered = state.lastAnswerFeedback !== null;
   const isCorrect = state.lastAnswerFeedback === 'correct';
+  const isFeedbackVisible = isAnswered && !isRetrying;
 
-  const mascot = getMascotProps(isAnswered, isCorrect, state.stage);
+  const mascot = getMascotProps(isFeedbackVisible, isCorrect, state.stage);
 
   const handleSelectOption = (option: number): void => {
     if (isCorrect) return;
+    setIsRetrying(false);
     setSelectedAnswer(option);
 
     if (activeProblem) {
@@ -76,11 +79,14 @@ export function PictorialModeView({
   };
 
   const handleRetry = (): void => {
+    soundService.playButtonClick();
+    setIsRetrying(true);
     setSelectedAnswer(null);
   };
 
   const handleNextProblem = (): void => {
     soundService.playCardFlip();
+    setIsRetrying(false);
     setSelectedAnswer(null);
     dispatch({ type: 'NEXT_PROBLEM' });
   };
@@ -139,9 +145,9 @@ export function PictorialModeView({
                 onClick={() => handleSelectOption(opt)}
                 className={`py-3.5 sm:py-4 rounded-2xl text-xl sm:text-2xl font-mono font-extrabold border-2 shadow-sm transition-colors active:scale-95 flex items-center justify-center ${getOptionStyle(
                   opt,
-                  selectedAnswer,
+                  isRetrying ? null : selectedAnswer,
                   activeProblem.targetCount,
-                  isAnswered,
+                  isFeedbackVisible,
                   isCorrect
                 )}`}
               >
@@ -153,7 +159,7 @@ export function PictorialModeView({
       )}
 
       {/* Post-Answer Feedback and Next Button */}
-      {isAnswered && (
+      {isFeedbackVisible && (
         <div className="flex flex-col items-center gap-3 animate-fade-in w-full max-w-md">
           <div
             role="status"
@@ -171,7 +177,15 @@ export function PictorialModeView({
           </div>
 
           <div className="flex items-center gap-3">
-            {!isCorrect && (
+            {isCorrect ? (
+              <button
+                type="button"
+                onClick={handleNextProblem}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-sm rounded-xl shadow-md transition-colors"
+              >
+                Next Flash Card →
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={handleRetry}
@@ -180,14 +194,6 @@ export function PictorialModeView({
                 Try Again 🔄
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleNextProblem}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-sm rounded-xl shadow-md transition-colors"
-            >
-              Next Flash Card →
-            </button>
           </div>
         </div>
       )}

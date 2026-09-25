@@ -74,7 +74,7 @@ export function AbstractModeView({
   const isAnswered = state.lastAnswerFeedback !== null;
   const isCorrect = state.lastAnswerFeedback === 'correct';
 
-  const mascot = getMascotDetails(isAnswered, isCorrect);
+  const mascot = getMascotDetails(isAnswered && !isRetrying, isCorrect);
 
   const handleDigit = useCallback(
     (digit: number): void => {
@@ -204,7 +204,7 @@ export function AbstractModeView({
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 w-full">
-          {isAnswered && (
+          {isAnswered && !isRetrying && (
             <div className="flex flex-col items-center gap-2 w-full max-w-xs animate-fade-in">
               <div
                 role="status"

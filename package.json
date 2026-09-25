@@ -4,6 +4,24 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Concrete-Pictorial-Abstract (CPA) Early Mathematics PWA with Ten-Frames and Cute Kitten Mascots",
+  "license": "MIT",
+  "keywords": [
+    "singapore-math",
+    "cpa-framework",
+    "ten-frame",
+    "math-game",
+    "pwa",
+    "react",
+    "vite",
+    "tailwind",
+    "torph",
+    "typehug",
+    "educational-game"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/example/kitten-math-cpa.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

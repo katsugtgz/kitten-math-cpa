@@ -93,6 +93,34 @@ test.describe('Abstract Mode: Number Bonds & Equations', () => {
     const retryBtn = page.getByRole('button', { name: /Try Again/i });
     await expect(retryBtn).toBeVisible();
     await retryBtn.click();
+
+    // Verify error message is dismissed
+    await expect(page.getByText('Try reviewing the parts of the number.')).not.toBeVisible();
+
+    // Now solve correctly
+    const wholeEl = page.locator('[aria-label*="Whole circle:"]');
+    const partAEl = page.locator('[aria-label*="Part A circle:"]');
+    const partBEl = page.locator('[aria-label*="Part B circle:"]');
+
+    const wholeText = (await wholeEl.getAttribute('aria-label'))?.replace('Whole circle:', '').trim() ?? '';
+    const partAText = (await partAEl.getAttribute('aria-label'))?.replace('Part A circle:', '').trim() ?? '';
+    const partBText = (await partBEl.getAttribute('aria-label'))?.replace('Part B circle:', '').trim() ?? '';
+
+    let ans = 0;
+    if (wholeText === '?') {
+      ans = Number(partAText) + Number(partBText);
+    } else if (partAText === '?') {
+      ans = Number(wholeText) - Number(partBText);
+    } else {
+      ans = Number(wholeText) - Number(partAText);
+    }
+
+    for (const char of String(ans)) {
+      await page.getByRole('button', { name: `Digit ${char}` }).click();
+    }
+    await page.getByRole('button', { name: 'Submit Answer' }).click();
+
+    await expect(page.getByText('Bravo! Correct equation!')).toBeVisible();
   });
 
   test('should support keyboard typing and solve equations in Stage 4', async ({ page }) => {

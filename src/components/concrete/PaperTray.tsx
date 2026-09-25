@@ -8,10 +8,14 @@ export interface PaperTrayProps {
   readonly currentCount: number;
   readonly capacity: FrameCapacity;
   readonly onAddCounter?: (color: CounterColor) => void;
+  readonly onRemoveCounter?: (slotIndex: number) => void;
   readonly onClearFrame: () => void;
   readonly onFillFive?: () => void;
   readonly onFillTen?: () => void;
   readonly onToggleCapacity?: () => void;
+  readonly onTouchStartCounter?: (e: React.TouchEvent, color: CounterColor) => void;
+  readonly onTouchMoveCounter?: (e: React.TouchEvent, color: CounterColor) => void;
+  readonly onTouchEndCounter?: (e: React.TouchEvent, color: CounterColor) => void;
 }
 
 export function PaperTray({
@@ -20,11 +24,16 @@ export function PaperTray({
   currentCount,
   capacity,
   onAddCounter,
+  onRemoveCounter,
   onClearFrame,
   onFillFive,
   onFillTen,
   onToggleCapacity,
+  onTouchStartCounter,
+  onTouchMoveCounter,
+  onTouchEndCounter,
 }: PaperTrayProps): React.JSX.Element {
+  const isDraggingRef = React.useRef(false);
   const numberTrackLength = capacity;
   const numbers = Array.from({ length: numberTrackLength }, (_, i) => i + 1);
 
@@ -66,6 +75,29 @@ export function PaperTray({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Bay 1: Manipulative Basin (Loose Red & Black Counters) */}
         <div
+          data-testid="paper-tray-basin"
+          data-paper-tray="true"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const plainText = e.dataTransfer.getData('text/plain');
+            const sourceIndexStr = e.dataTransfer.getData('source-index');
+
+            let sourceIndex: number | undefined;
+            if (plainText.startsWith('counter:')) {
+              const parts = plainText.split(':');
+              sourceIndex = parseInt(parts[2], 10);
+            } else if (sourceIndexStr !== '') {
+              sourceIndex = parseInt(sourceIndexStr, 10);
+            }
+
+            if (sourceIndex !== undefined && !isNaN(sourceIndex) && onRemoveCounter) {
+              onRemoveCounter(sourceIndex);
+            }
+          }}
           className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 flex flex-col justify-between relative shadow-inner"
           style={{ minHeight: '120px' }}
         >
@@ -84,6 +116,7 @@ export function PaperTray({
               type="button"
               aria-label="Select and Add Red Counter"
               onClick={() => {
+                if (isDraggingRef.current) return;
                 onSelectColor('red');
                 onAddCounter?.('red');
               }}
@@ -93,15 +126,28 @@ export function PaperTray({
                   : 'hover:bg-slate-200/50'
               }`}
             >
-              <TactileCounter
-                color="red"
-                size="md"
-                interactive
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', 'red');
-                }}
-              />
+              <div
+                onTouchStart={(e) => onTouchStartCounter?.(e, 'red')}
+                onTouchMove={(e) => onTouchMoveCounter?.(e, 'red')}
+                onTouchEnd={(e) => onTouchEndCounter?.(e, 'red')}
+              >
+                <TactileCounter
+                  color="red"
+                  size="md"
+                  interactive
+                  draggable
+                  onDragStart={(e) => {
+                    isDraggingRef.current = true;
+                    e.dataTransfer.setData('text/plain', 'red');
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  onDragEnd={() => {
+                    setTimeout(() => {
+                      isDraggingRef.current = false;
+                    }, 100);
+                  }}
+                />
+              </div>
               <span className="text-xs font-bold text-rose-600">Red Chip</span>
             </button>
 
@@ -112,6 +158,7 @@ export function PaperTray({
               type="button"
               aria-label="Select and Add Black Counter"
               onClick={() => {
+                if (isDraggingRef.current) return;
                 onSelectColor('black');
                 onAddCounter?.('black');
               }}
@@ -121,21 +168,34 @@ export function PaperTray({
                   : 'hover:bg-slate-200/50'
               }`}
             >
-              <TactileCounter
-                color="black"
-                size="md"
-                interactive
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', 'black');
-                }}
-              />
+              <div
+                onTouchStart={(e) => onTouchStartCounter?.(e, 'black')}
+                onTouchMove={(e) => onTouchMoveCounter?.(e, 'black')}
+                onTouchEnd={(e) => onTouchEndCounter?.(e, 'black')}
+              >
+                <TactileCounter
+                  color="black"
+                  size="md"
+                  interactive
+                  draggable
+                  onDragStart={(e) => {
+                    isDraggingRef.current = true;
+                    e.dataTransfer.setData('text/plain', 'black');
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  onDragEnd={() => {
+                    setTimeout(() => {
+                      isDraggingRef.current = false;
+                    }, 100);
+                  }}
+                />
+              </div>
               <span className="text-xs font-bold text-slate-800">Black Chip</span>
             </button>
           </div>
 
           <div className="text-center text-[10px] text-slate-400 font-medium">
-            Tap to select color or add directly to the grid
+            Tap or drag to place onto the ten-frame grid
           </div>
         </div>
 

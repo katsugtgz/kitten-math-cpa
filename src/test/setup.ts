@@ -8,14 +8,46 @@ afterEach(() => {
 
 const originalConsoleError = console.error;
 console.error = (...args: unknown[]) => {
-  if (
-    typeof args[0] === 'string' &&
-    (args[0].includes('Could not parse CSS stylesheet') || args[0].includes('[torph-'))
-  ) {
+  const isCssParseError = args.some((arg) => {
+    const text =
+      typeof arg === 'string'
+        ? arg
+        : arg instanceof Error
+          ? `${arg.message} ${arg.stack ?? ''}`
+          : String(arg);
+    return (
+      text.includes('Could not parse CSS stylesheet') ||
+      text.includes('[torph-') ||
+      text.includes('--torph-')
+    );
+  });
+
+  if (isCssParseError) {
     return;
   }
   originalConsoleError(...args);
 };
+
+const proc = (
+  globalThis as unknown as {
+    process?: { stderr?: { write: (...args: unknown[]) => boolean } };
+  }
+).process;
+
+if (proc && proc.stderr) {
+  const originalStderrWrite = proc.stderr.write.bind(proc.stderr);
+  proc.stderr.write = (chunk: unknown, ...rest: unknown[]) => {
+    const str = String(chunk);
+    if (
+      str.includes('Could not parse CSS stylesheet') ||
+      str.includes('[torph-') ||
+      str.includes('--torph-')
+    ) {
+      return true;
+    }
+    return originalStderrWrite(chunk, ...rest);
+  };
+}
 
 
 // Mock Web Audio API for jsdom environment

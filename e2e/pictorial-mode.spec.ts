@@ -25,40 +25,50 @@ test.describe('Pictorial Mode: Visual Subitizing & Kitten Flash Cards', () => {
   });
 
   test('should handle user answers, feedback, and progression to next card', async ({ page }) => {
+    const card = page.getByTestId('kitten-card');
+    const cardLabel = await card.getAttribute('aria-label');
+    const countMatch = cardLabel?.match(/count (\d+)/i);
+    const correctCount = countMatch ? Number(countMatch[1]) : 1;
+
     const options = page.locator('button[aria-label^="Select "]');
-    const count = await options.count();
-    expect(count).toBeGreaterThanOrEqual(2);
+    const optionCount = await options.count();
+    expect(optionCount).toBeGreaterThanOrEqual(2);
 
-    // Let's test the answer flow
-    // Try the first option
-    await options.first().click();
+    // 1. Intentionally choose an incorrect answer first to verify error and retry flow
+    const allOptions = await options.all();
+    let wrongOption = null;
+    for (const opt of allOptions) {
+      const label = await opt.getAttribute('aria-label');
+      if (label && !label.includes(`Select ${correctCount} counters`)) {
+        wrongOption = opt;
+        break;
+      }
+    }
 
-    // Check feedback banner
-    const feedback = page.getByRole('status').first();
-    await expect(feedback).toBeVisible();
+    if (wrongOption) {
+      await wrongOption.click();
 
-    const isSuccess = await page.getByRole('button', { name: /Next Flash Card/i }).isVisible();
+      // Verify error feedback is displayed
+      await expect(page.getByText(/Not quite! Look closely at the pattern/i)).toBeVisible();
 
-    if (!isSuccess) {
-      // It was incorrect! Verify "Try Again" is displayed
+      // "Next Flash Card" MUST NOT be visible on incorrect answer
+      await expect(page.getByRole('button', { name: /Next Flash Card/i })).not.toBeVisible();
+
+      // "Try Again" button MUST be visible
       const tryAgainBtn = page.getByRole('button', { name: /Try Again/i });
       await expect(tryAgainBtn).toBeVisible();
       await tryAgainBtn.click();
 
-      // Now click the remaining options until we get it right
-      let solved = false;
-      for (let i = 1; i < count; i++) {
-        await options.nth(i).click();
-        const nextVisible = await page.getByRole('button', { name: /Next Flash Card/i }).isVisible();
-        if (nextVisible) {
-          solved = true;
-          break;
-        } else {
-          await page.getByRole('button', { name: /Try Again/i }).click();
-        }
-      }
-      expect(solved).toBe(true);
+      // After clicking Try Again, the error banner must be dismissed
+      await expect(page.getByText(/Not quite! Look closely at the pattern/i)).not.toBeVisible();
     }
+
+    // 2. Now select the correct answer
+    const correctBtn = page.getByRole('button', { name: `Select ${correctCount} counters` });
+    await correctBtn.click();
+
+    // Verify success feedback
+    await expect(page.getByText(new RegExp(`Excellent! Count is ${correctCount}`, 'i'))).toBeVisible();
 
     // Now click Next Flash Card
     const nextBtn = page.getByRole('button', { name: /Next Flash Card/i });

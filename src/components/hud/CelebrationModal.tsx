@@ -42,6 +42,12 @@ export function CelebrationModal({
       open={isOpen}
       aria-labelledby="celebration-title"
       data-testid="celebration-modal"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onDismiss();
+        }
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in w-full h-full border-none max-w-none max-h-none m-0"
     >
       <div className="relative bg-white border-4 border-amber-400 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center animate-[spring-pop_350ms_var(--ease-spring-pop)]">

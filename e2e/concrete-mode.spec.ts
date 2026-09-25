@@ -121,4 +121,37 @@ test.describe('Concrete Mode: Physical Manipulatives & Ten-Frames', () => {
     const trackItem5 = numberTrack.getByText('5', { exact: true });
     await expect(trackItem5).toBeVisible();
   });
+
+  test('should support drag-and-drop of counters from Paper Tray onto Ten-Frame Grid slots and moving between slots', async ({
+    page,
+  }) => {
+    const redChip = page
+      .getByRole('button', { name: 'Select and Add Red Counter' })
+      .getByRole('img', { name: /red tactile counter chip/i });
+    const slot3 = page.getByRole('button', { name: 'Slot 3: empty' });
+
+    // Drag red chip specifically onto Slot 3
+    await redChip.dragTo(slot3);
+    await expect(page.getByRole('button', { name: 'Slot 3: red' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Slot 1: empty' })).toBeVisible();
+
+    // Now drag the placed counter from Slot 3 to Slot 6
+    const counterInSlot3 = page
+      .getByRole('button', { name: 'Slot 3: red' })
+      .getByRole('img', { name: /red tactile counter chip/i });
+    const slot6 = page.getByRole('button', { name: 'Slot 6: empty' });
+    await counterInSlot3.dragTo(slot6);
+
+    await expect(page.getByRole('button', { name: 'Slot 6: red' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Slot 3: empty' })).toBeVisible();
+
+    // Drag counter from Slot 6 back to Paper Tray basin to remove it
+    const counterInSlot6 = page
+      .getByRole('button', { name: 'Slot 6: red' })
+      .getByRole('img', { name: /red tactile counter chip/i });
+    const paperTrayBasin = page.getByTestId('paper-tray-basin');
+    await counterInSlot6.dragTo(paperTrayBasin);
+
+    await expect(page.getByRole('button', { name: 'Slot 6: empty' })).toBeVisible();
+  });
 });
