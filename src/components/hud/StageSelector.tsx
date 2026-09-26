@@ -1,6 +1,6 @@
 import React from 'react';
 import type { GameMode, StageLevel } from '../../state/types';
-import { soundService } from '../../services/sound-service';
+import { useAudio } from '../../services/audio/audio-context';
 
 export interface StageSelectorProps {
   readonly mode: GameMode;
@@ -28,13 +28,15 @@ export function StageSelector({
   onModeChange,
   onStageChange,
 }: StageSelectorProps): React.JSX.Element {
+  const { audio } = useAudio();
+
   const handleMode = (m: GameMode): void => {
-    soundService.playButtonClick();
+    audio.playButtonClick();
     onModeChange(m);
   };
 
   const handleStage = (s: StageLevel): void => {
-    soundService.playButtonClick();
+    audio.playButtonClick();
     onStageChange(s);
   };
 

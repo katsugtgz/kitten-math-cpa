@@ -1,4 +1,4 @@
-import { EquationMissing, EquationOperator, EquationProblem } from './types';
+import { DomainEquationProblem, EquationMissing, EquationOperator, EquationProblem } from './types';
 
 export interface EquationOptions {
   operator?: EquationOperator;
@@ -13,7 +13,7 @@ export interface EquationOptions {
 /**
  * Generates an addition or subtraction arithmetic equation problem.
  */
-export function generateEquation(options?: EquationOptions): EquationProblem {
+export function generateEquation(options?: EquationOptions): DomainEquationProblem {
   const randomFn = options?.randomFn ?? Math.random;
   const operator: EquationOperator =
     options?.operator ?? (randomFn() < 0.5 ? '+' : '-');
@@ -91,8 +91,9 @@ export function generateEquation(options?: EquationOptions): EquationProblem {
 
   const id = `eq-${Date.now()}-${Math.floor(randomFn() * 100000)}`;
 
-  return {
+  const problem: DomainEquationProblem = {
     id,
+    type: 'equation',
     operand1,
     operator,
     operand2,
@@ -100,7 +101,15 @@ export function generateEquation(options?: EquationOptions): EquationProblem {
     missing,
     answer,
     isBridgingTen,
+    validate(this: EquationProblem | void, userAnswer: number): boolean {
+      return validateEquationAnswer(this ?? problem, userAnswer);
+    },
+    getExpectedAnswer(this: EquationProblem | void): number {
+      return (this ?? problem).answer;
+    },
   };
+
+  return problem;
 }
 
 /**
@@ -111,7 +120,7 @@ export const generateEquationProblem = generateEquation;
 export function generateBridgingTenAddition(
   missing?: EquationMissing,
   randomFn?: () => number
-): EquationProblem {
+): DomainEquationProblem {
   return generateEquation({
     operator: '+',
     bridgingTenOnly: true,
@@ -123,7 +132,7 @@ export function generateBridgingTenAddition(
 export function generateBridgingTenSubtraction(
   missing?: EquationMissing,
   randomFn?: () => number
-): EquationProblem {
+): DomainEquationProblem {
   return generateEquation({
     operator: '-',
     bridgingTenOnly: true,
@@ -135,7 +144,7 @@ export function generateBridgingTenSubtraction(
 export function generateTeenAddition(
   missing?: EquationMissing,
   randomFn?: () => number
-): EquationProblem {
+): DomainEquationProblem {
   const rFn = randomFn ?? Math.random;
   const ones = Math.floor(rFn() * 9) + 1; // 1..9
   const id = `eq-teen-${Date.now()}-${Math.floor(rFn() * 100000)}`;
@@ -145,8 +154,9 @@ export function generateTeenAddition(
   else if (missingSlot === 'operand1') answer = 10;
   else answer = ones;
 
-  return {
+  const problem: DomainEquationProblem = {
     id,
+    type: 'equation',
     operand1: 10,
     operator: '+',
     operand2: ones,
@@ -154,7 +164,15 @@ export function generateTeenAddition(
     missing: missingSlot,
     answer,
     isBridgingTen: false,
+    validate(this: EquationProblem | void, userAnswer: number): boolean {
+      return validateEquationAnswer(this ?? problem, userAnswer);
+    },
+    getExpectedAnswer(this: EquationProblem | void): number {
+      return (this ?? problem).answer;
+    },
   };
+
+  return problem;
 }
 
 export function validateEquationAnswer(

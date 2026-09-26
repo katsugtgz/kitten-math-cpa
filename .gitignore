@@ -35,3 +35,8 @@ dist-ssr
 
 # Agent brain / temp dirs
 .agents
+.codegraph/
+.claude/
+.commandcode/
+.hermes/
+.qoder/

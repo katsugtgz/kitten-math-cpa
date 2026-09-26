@@ -9,9 +9,15 @@ import {
   evaluateAnswer,
 } from '../progression';
 import type {
+  ActiveProblem,
   SubitizeProblem,
   NumberBondProblem,
   EquationProblem,
+} from '../../domain/types';
+import {
+  createSubitizeProblem,
+  createNumberBondProblem,
+  createEquationProblem,
 } from '../../domain/types';
 
 describe('Progression Rules Engine (src/state/progression.ts)', () => {
@@ -107,59 +113,59 @@ describe('Progression Rules Engine (src/state/progression.ts)', () => {
 
   describe('evaluateAnswer & getCorrectAnswer', () => {
     it('evaluates SubitizeProblem correctly', () => {
-      const problem: SubitizeProblem = {
+      const problem: SubitizeProblem = createSubitizeProblem({
         id: 'sub-1',
         targetCount: 7,
         redCount: 5,
         blackCount: 2,
         options: [5, 6, 7, 8],
         layout: 'single',
-      };
+      });
       expect(getCorrectAnswer(problem)).toBe(7);
       expect(evaluateAnswer(problem, 7)).toBe(true);
       expect(evaluateAnswer(problem, 6)).toBe(false);
     });
 
     it('evaluates NumberBondProblem with missing whole', () => {
-      const problem: NumberBondProblem = {
+      const problem: NumberBondProblem = createNumberBondProblem({
         id: 'nb-1',
         whole: 10,
         partA: 7,
         partB: 3,
         missing: 'whole',
         answer: 10,
-      };
+      });
       expect(getCorrectAnswer(problem)).toBe(10);
       expect(evaluateAnswer(problem, 10)).toBe(true);
       expect(evaluateAnswer(problem, 7)).toBe(false);
     });
 
     it('evaluates NumberBondProblem with missing partA and partB', () => {
-      const problemA: NumberBondProblem = {
+      const problemA: NumberBondProblem = createNumberBondProblem({
         id: 'nb-2',
         whole: 10,
         partA: 6,
         partB: 4,
         missing: 'partA',
         answer: 6,
-      };
+      });
       expect(getCorrectAnswer(problemA)).toBe(6);
       expect(evaluateAnswer(problemA, 6)).toBe(true);
 
-      const problemB: NumberBondProblem = {
+      const problemB: NumberBondProblem = createNumberBondProblem({
         id: 'nb-3',
         whole: 10,
         partA: 6,
         partB: 4,
         missing: 'partB',
         answer: 4,
-      };
+      });
       expect(getCorrectAnswer(problemB)).toBe(4);
       expect(evaluateAnswer(problemB, 4)).toBe(true);
     });
 
     it('evaluates EquationProblem for all missing positions', () => {
-      const eqResult: EquationProblem = {
+      const eqResult: EquationProblem = createEquationProblem({
         id: 'eq-1',
         operand1: 8,
         operator: '+',
@@ -167,12 +173,12 @@ describe('Progression Rules Engine (src/state/progression.ts)', () => {
         result: 13,
         missing: 'result',
         answer: 13,
-      };
+      });
       expect(getCorrectAnswer(eqResult)).toBe(13);
       expect(evaluateAnswer(eqResult, 13)).toBe(true);
       expect(evaluateAnswer(eqResult, 12)).toBe(false);
 
-      const eqOp1: EquationProblem = {
+      const eqOp1: EquationProblem = createEquationProblem({
         id: 'eq-2',
         operand1: 8,
         operator: '+',
@@ -180,11 +186,11 @@ describe('Progression Rules Engine (src/state/progression.ts)', () => {
         result: 13,
         missing: 'operand1',
         answer: 8,
-      };
+      });
       expect(getCorrectAnswer(eqOp1)).toBe(8);
       expect(evaluateAnswer(eqOp1, 8)).toBe(true);
 
-      const eqOp2: EquationProblem = {
+      const eqOp2: EquationProblem = createEquationProblem({
         id: 'eq-3',
         operand1: 8,
         operator: '+',
@@ -192,9 +198,24 @@ describe('Progression Rules Engine (src/state/progression.ts)', () => {
         result: 13,
         missing: 'operand2',
         answer: 5,
-      };
+      });
       expect(getCorrectAnswer(eqOp2)).toBe(5);
       expect(evaluateAnswer(eqOp2, 5)).toBe(true);
+    });
+
+    it('evaluates un-hydrated legacy objects via fallback', () => {
+      const unhydratedSub = { id: 'legacy-sub', targetCount: 9 } as unknown as ActiveProblem;
+      expect(getCorrectAnswer(unhydratedSub)).toBe(9);
+      expect(evaluateAnswer(unhydratedSub, 9)).toBe(true);
+      expect(evaluateAnswer(unhydratedSub, 8)).toBe(false);
+
+      const unhydratedNb = { id: 'legacy-nb', whole: 10, partA: 8, partB: 2, missing: 'partB' } as unknown as ActiveProblem;
+      expect(getCorrectAnswer(unhydratedNb)).toBe(2);
+      expect(evaluateAnswer(unhydratedNb, 2)).toBe(true);
+
+      const unhydratedEq = { id: 'legacy-eq', operand1: 7, operator: '+', operand2: 3, result: 10, missing: 'result' } as unknown as ActiveProblem;
+      expect(getCorrectAnswer(unhydratedEq)).toBe(10);
+      expect(evaluateAnswer(unhydratedEq, 10)).toBe(true);
     });
 
     it('returns false and null for null problem', () => {

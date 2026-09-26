@@ -5,7 +5,6 @@ import { KittenMascot } from '../common/KittenMascot';
 import { NumberBondTree } from './NumberBondTree';
 import { EquationDisplay } from './EquationDisplay';
 import { VirtualKeypad } from './VirtualKeypad';
-import { soundService } from '../../services/sound-service';
 import { TypoText } from '../common/TypoText';
 import type { MascotEmotion, MascotPawState } from '../common/KittenMascot';
 
@@ -35,7 +34,7 @@ function renderProblem(
 ): React.JSX.Element | null {
   if (!problem) return null;
 
-  if ('whole' in problem) {
+  if (problem.type === 'number-bond') {
     const bond = problem as NumberBondProblem;
     return (
       <NumberBondTree
@@ -49,7 +48,7 @@ function renderProblem(
     );
   }
 
-  if ('operator' in problem) {
+  if (problem.type === 'equation') {
     const eq = problem as EquationProblem;
     return (
       <EquationDisplay
@@ -102,19 +101,9 @@ export function AbstractModeView({
   const handleSubmit = useCallback((): void => {
     if (isCorrect || currentInput === '' || !activeProblem) return;
     const num = Number(currentInput);
-    const expected = (activeProblem as { answer?: number }).answer;
-
-    if (expected !== undefined) {
-      if (num === expected) {
-        soundService.playCorrect(state.streak + 1);
-      } else {
-        soundService.playTryAgain();
-      }
-    }
-
     setIsRetrying(false);
     dispatch({ type: 'SUBMIT_ANSWER', answer: num });
-  }, [isCorrect, currentInput, activeProblem, state.streak, dispatch]);
+  }, [isCorrect, currentInput, activeProblem, dispatch]);
 
   const handleRetry = (): void => {
     setIsRetrying(true);
@@ -122,7 +111,6 @@ export function AbstractModeView({
   };
 
   const handleNextProblem = (): void => {
-    soundService.playCardFlip();
     setIsRetrying(false);
     setCurrentInput('');
     dispatch({ type: 'NEXT_PROBLEM' });

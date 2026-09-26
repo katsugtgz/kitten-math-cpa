@@ -1,5 +1,5 @@
 import React from 'react';
-import { soundService } from '../../services/sound-service';
+import { useAudio } from '../../services/audio/audio-context';
 
 export interface VirtualKeypadProps {
   readonly onDigit: (digit: number) => void;
@@ -17,21 +17,23 @@ export function VirtualKeypad({
   disabled = false,
   className = '',
 }: VirtualKeypadProps): React.JSX.Element {
+  const { audio } = useAudio();
+
   const handleDigit = (digit: number): void => {
     if (disabled) return;
-    soundService.playButtonClick();
+    audio.playButtonClick();
     onDigit(digit);
   };
 
   const handleDelete = (): void => {
     if (disabled) return;
-    soundService.playButtonClick();
+    audio.playButtonClick();
     onDelete();
   };
 
   const handleSubmit = (): void => {
     if (disabled) return;
-    soundService.playButtonClick();
+    audio.playButtonClick();
     onSubmit();
   };
 

@@ -1,159 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import type { GameState, GameAction, CounterColor } from '../../state/types';
 import { KittenMascot } from '../common/KittenMascot';
-import { TenFrameGrid } from './TenFrameGrid';
-import { PaperTray } from './PaperTray';
 import { AnimatedNumber } from '../common/AnimatedNumber';
-import { TactileCounter } from '../common/TactileCounter';
-import { soundService } from '../../services/sound-service';
+import { ManipulativeWorkbench } from './ManipulativeWorkbench';
+import { useAudio } from '../../services/audio/audio-context';
 
 export interface ConcreteModeViewProps {
   readonly state: GameState;
   readonly dispatch: React.Dispatch<GameAction>;
-  readonly selectedColor: CounterColor;
-  readonly onSelectColor: (c: CounterColor) => void;
+  readonly selectedColor?: CounterColor;
+  readonly onSelectColor?: (c: CounterColor) => void;
 }
 
+/**
+ * Concrete Mode View (Singapore CPA Concrete Phase).
+ *
+ * Coordinates top-level motivational Kitten Mascot and live Counter Tally Bar,
+ * delegating interactive tactile physics and frame manipulation to the deep
+ * ManipulativeWorkbench module.
+ */
 export function ConcreteModeView({
   state,
   dispatch,
   selectedColor,
   onSelectColor,
 }: ConcreteModeViewProps): React.JSX.Element {
-  const [touchDrag, setTouchDrag] = useState<{
-    color: CounterColor;
-    x: number;
-    y: number;
-    sourceIndex?: number;
-  } | null>(null);
-  const [touchHoverSlot, setTouchHoverSlot] = useState<number | null>(null);
-  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
-  const isTouchDragging = useRef<boolean>(false);
-
-  const handleSlotClick = (index: number): void => {
-    const isOccupied = state.grid.cells[index] !== 'empty';
-    if (isOccupied) {
-      soundService.playCounterRemove();
-      dispatch({ type: 'REMOVE_COUNTER', slotIndex: index });
-    } else {
-      soundService.playCounterPlace(selectedColor === 'red');
-      dispatch({ type: 'PLACE_COUNTER', slotIndex: index, color: selectedColor });
-    }
-  };
-
-  const handleDropCounter = (index: number, color: CounterColor): void => {
-    soundService.playCounterPlace(color === 'red');
-    dispatch({ type: 'PLACE_COUNTER', slotIndex: index, color });
-  };
-
-  const handleMoveCounter = (fromIndex: number, toIndex: number): void => {
-    const sourceCell = state.grid.cells[fromIndex];
-    if (sourceCell === 'empty') return;
-    soundService.playCounterPlace(sourceCell === 'red');
-    dispatch({ type: 'MOVE_COUNTER', fromIndex, toIndex });
-  };
-
-  const handleTouchStart = (
-    e: React.TouchEvent,
-    _color: CounterColor,
-    _sourceIndex?: number
-  ): void => {
-    const touch = e.touches[0];
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-    isTouchDragging.current = false;
-  };
-
-  const handleTouchMove = (
-    e: React.TouchEvent,
-    color: CounterColor,
-    sourceIndex?: number
-  ): void => {
-    if (!touchStartPos.current) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - touchStartPos.current.x;
-    const dy = touch.clientY - touchStartPos.current.y;
-
-    if (!isTouchDragging.current && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-      isTouchDragging.current = true;
-    }
-
-    if (isTouchDragging.current) {
-      setTouchDrag({
-        color,
-        x: touch.clientX,
-        y: touch.clientY,
-        sourceIndex,
-      });
-
-      const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-      const slotBtn = elem?.closest('[data-slot-index]');
-      if (slotBtn) {
-        const slotIdx = Number(slotBtn.getAttribute('data-slot-index'));
-        setTouchHoverSlot(slotIdx);
-      } else {
-        setTouchHoverSlot(null);
-      }
-    }
-  };
-
-  const handleTouchEnd = (
-    e: React.TouchEvent,
-    color: CounterColor,
-    sourceIndex?: number
-  ): void => {
-    if (isTouchDragging.current) {
-      const touch = e.changedTouches[0];
-      const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-      const slotBtn = elem?.closest('[data-slot-index]');
-
-      if (slotBtn) {
-        const targetSlot = Number(slotBtn.getAttribute('data-slot-index'));
-        if (sourceIndex !== undefined && sourceIndex !== targetSlot) {
-          handleMoveCounter(sourceIndex, targetSlot);
-        } else {
-          handleDropCounter(targetSlot, color);
-        }
-      } else if (elem?.closest('[data-paper-tray]') && sourceIndex !== undefined) {
-        handleSlotClick(sourceIndex);
-      }
-    }
-
-    setTouchDrag(null);
-    setTouchHoverSlot(null);
-    isTouchDragging.current = false;
-    touchStartPos.current = null;
-  };
-
-  const handleClear = (): void => {
-    soundService.playCounterRemove();
-    dispatch({ type: 'CLEAR_FRAME' });
-  };
-
-  const handleToggleCapacity = (): void => {
-    soundService.playButtonClick();
-    dispatch({
-      type: 'SET_CAPACITY',
-      capacity: state.grid.capacity === 10 ? 20 : 10,
-    });
-  };
-
-  const handleFillFive = (): void => {
-    soundService.playCounterPlace(selectedColor === 'red');
-    for (let i = 0; i < 5; i++) {
-      if (state.grid.cells[i] === 'empty') {
-        dispatch({ type: 'PLACE_COUNTER', slotIndex: i, color: selectedColor });
-      }
-    }
-  };
-
-  const handleFillTen = (): void => {
-    soundService.playCounterPlace(selectedColor === 'red');
-    for (let i = 0; i < 10; i++) {
-      if (state.grid.cells[i] === 'empty') {
-        dispatch({ type: 'PLACE_COUNTER', slotIndex: i, color: selectedColor });
-      }
-    }
-  };
+  const { audio } = useAudio();
 
   const mascotEmotion =
     state.grid.totalCount >= state.grid.capacity
@@ -181,7 +53,7 @@ export function ConcreteModeView({
       data-testid="concrete-mode-view"
       className="flex flex-col items-center gap-6 w-full max-w-4xl mx-auto"
     >
-      {/* Top Banner with Kitten Mascot Peeking */}
+      {/* Top Banner with Kitten Mascot */}
       <div className="flex flex-col items-center">
         <KittenMascot
           emotion={mascotEmotion}
@@ -190,7 +62,7 @@ export function ConcreteModeView({
           size="md"
           speechBubble={speechMessage}
           interactive
-          onMascotClick={() => soundService.playButtonClick()}
+          onMascotClick={() => audio.playButtonClick()}
         />
       </div>
 
@@ -231,59 +103,13 @@ export function ConcreteModeView({
         </div>
       </div>
 
-      {/* Main Manipulative Ten-Frame Grid */}
-      <TenFrameGrid
+      {/* Deep Manipulative Workbench (TenFrameGrid + PaperTray + Drag & Touch Physics) */}
+      <ManipulativeWorkbench
         grid={state.grid}
-        selectedColor={selectedColor}
-        onSlotClick={handleSlotClick}
-        onDropCounter={handleDropCounter}
-        onMoveCounter={handleMoveCounter}
-        externalDragOverIndex={touchHoverSlot}
-        onTouchStartCounter={handleTouchStart}
-        onTouchMoveCounter={handleTouchMove}
-        onTouchEndCounter={handleTouchEnd}
-      />
-
-      {/* Origami Paper Tray with Loose Counters & Number Track Strip */}
-      <PaperTray
+        dispatch={dispatch}
         selectedColor={selectedColor}
         onSelectColor={onSelectColor}
-        currentCount={state.grid.totalCount}
-        capacity={state.grid.capacity}
-        onAddCounter={(color) => {
-          // Find first empty slot and place counter
-          const firstEmpty = state.grid.cells.findIndex((c) => c === 'empty');
-          if (firstEmpty !== -1) {
-            soundService.playCounterPlace(color === 'red');
-            dispatch({ type: 'PLACE_COUNTER', slotIndex: firstEmpty, color });
-          }
-        }}
-        onRemoveCounter={(slotIndex) => {
-          soundService.playCounterRemove();
-          dispatch({ type: 'REMOVE_COUNTER', slotIndex });
-        }}
-        onClearFrame={handleClear}
-        onFillFive={handleFillFive}
-        onFillTen={handleFillTen}
-        onToggleCapacity={handleToggleCapacity}
-        onTouchStartCounter={handleTouchStart}
-        onTouchMoveCounter={handleTouchMove}
-        onTouchEndCounter={handleTouchEnd}
       />
-
-      {/* Touch Drag Floating Counter Preview */}
-      {touchDrag && (
-        <div
-          data-testid="floating-touch-chip"
-          className="fixed pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-50 transition-none scale-110 shadow-2xl"
-          style={{
-            left: `${touchDrag.x}px`,
-            top: `${touchDrag.y}px`,
-          }}
-        >
-          <TactileCounter color={touchDrag.color} size="md" animated={false} />
-        </div>
-      )}
     </div>
   );
 }

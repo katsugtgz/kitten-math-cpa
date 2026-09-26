@@ -1,7 +1,9 @@
-import React, { useReducer, useState } from 'react';
+import React, { useReducer } from 'react';
 import { createInitialState, gameReducer } from './state/game-reducer';
-import type { CounterColor, GameMode, StageLevel } from './state/types';
-import { soundService } from './services/sound-service';
+import type { GameMode, StageLevel } from './state/types';
+import { AudioProvider, useAudio } from './services/audio/audio-context';
+import { useAudioFeedback } from './services/audio/use-audio-feedback';
+import type { AudioPort } from './services/audio/audio-port';
 import { Header } from './components/hud/Header';
 import { StageSelector } from './components/hud/StageSelector';
 import { ScoreBar } from './components/hud/ScoreBar';
@@ -11,16 +13,16 @@ import { ConcreteModeView } from './components/concrete/ConcreteModeView';
 import { PictorialModeView } from './components/pictorial/PictorialModeView';
 import { AbstractModeView } from './components/abstract/AbstractModeView';
 
-export default function App(): React.JSX.Element {
-  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
-  const [selectedColor, setSelectedColor] = useState<CounterColor>('red');
-  const [isMuted, setIsMuted] = useState<boolean>(() => soundService.getMuted());
+export interface AppProps {
+  readonly audio?: AudioPort;
+}
 
-  const handleToggleMute = (): void => {
-    const next = !isMuted;
-    soundService.setMuted(next);
-    setIsMuted(next);
-  };
+function GameApp(): React.JSX.Element {
+  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
+  const { audio, isMuted, toggleMute } = useAudio();
+
+  // Attach reactive audio feedback listener (observing state transitions and counters)
+  useAudioFeedback(state, audio);
 
   const handleModeChange = (mode: GameMode): void => {
     dispatch({ type: 'SET_MODE', mode });
@@ -45,7 +47,7 @@ export default function App(): React.JSX.Element {
         score={state.score}
         streak={state.streak}
         isMuted={isMuted}
-        onToggleMute={handleToggleMute}
+        onToggleMute={toggleMute}
       />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-5 sm:gap-6">
@@ -70,12 +72,7 @@ export default function App(): React.JSX.Element {
         {/* CPA Stage View Routing */}
         <div className="flex-1 flex flex-col items-center justify-start py-2">
           {state.mode === 'concrete' && (
-            <ConcreteModeView
-              state={state}
-              dispatch={dispatch}
-              selectedColor={selectedColor}
-              onSelectColor={setSelectedColor}
-            />
+            <ConcreteModeView state={state} dispatch={dispatch} />
           )}
 
           {state.mode === 'pictorial' && (
@@ -103,5 +100,13 @@ export default function App(): React.JSX.Element {
         </p>
       </footer>
     </div>
+  );
+}
+
+export default function App({ audio }: AppProps = {}): React.JSX.Element {
+  return (
+    <AudioProvider audio={audio}>
+      <GameApp />
+    </AudioProvider>
   );
 }

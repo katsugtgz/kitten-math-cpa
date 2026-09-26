@@ -6,6 +6,7 @@ import { VirtualKeypad } from '../abstract/VirtualKeypad';
 import { AbstractModeView } from '../abstract/AbstractModeView';
 import { createInitialState } from '../../state/game-reducer';
 import type { EquationProblem } from '../../domain/types';
+import { createEquationProblem } from '../../domain/types';
 
 describe('Abstract Presentation Components', () => {
   describe('NumberBondTree', () => {
@@ -43,7 +44,7 @@ describe('Abstract Presentation Components', () => {
 
   describe('EquationDisplay', () => {
     it('renders equation operands, operator, and missing result', () => {
-      const problem: EquationProblem = {
+      const problem: EquationProblem = createEquationProblem({
         id: 'eq-1',
         operand1: 10,
         operator: '+',
@@ -51,7 +52,7 @@ describe('Abstract Presentation Components', () => {
         result: 14,
         missing: 'result',
         answer: 14,
-      };
+      });
 
       render(<EquationDisplay problem={problem} currentInput="14" />);
 

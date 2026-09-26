@@ -5,6 +5,7 @@ import App from '../../App';
 import { PictorialModeView } from '../pictorial/PictorialModeView';
 import { createInitialState, gameReducer } from '../../state/game-reducer';
 import type { SubitizeProblem } from '../../domain/types';
+import { createSubitizeProblem } from '../../domain/types';
 
 describe('AppFlowChallenger: End-to-End User Flow & Adversarial Stress Verification', () => {
   beforeEach(() => {
@@ -248,7 +249,7 @@ describe('AppFlowChallenger: End-to-End User Flow & Adversarial Stress Verificat
 
   describe('4. Empirical Adversarial Challenge: Pictorial Mode Flashcard Display', () => {
     it('renders KittenCard in PictorialModeView with the active problem counters', () => {
-      const mockSubitize: SubitizeProblem = {
+      const mockSubitize: SubitizeProblem = createSubitizeProblem({
         id: 'sub-test-1',
         targetCount: 4,
         redCount: 4,
@@ -262,7 +263,7 @@ describe('AppFlowChallenger: End-to-End User Flow & Adversarial Stress Verificat
           blackCount: 0,
           totalCount: 4,
         },
-      };
+      });
 
       const state = createInitialState({
         mode: 'pictorial',
@@ -281,7 +282,7 @@ describe('AppFlowChallenger: End-to-End User Flow & Adversarial Stress Verificat
     });
 
     it('supports retry and triggers dynamic scaffolding in Pictorial mode after 2 consecutive errors', () => {
-      const mockSubitize: SubitizeProblem = {
+      const mockSubitize: SubitizeProblem = createSubitizeProblem({
         id: 'sub-test-2',
         targetCount: 3,
         redCount: 3,
@@ -295,7 +296,7 @@ describe('AppFlowChallenger: End-to-End User Flow & Adversarial Stress Verificat
           blackCount: 0,
           totalCount: 3,
         },
-      };
+      });
 
       function PictorialTestWrapper() {
         const [state, dispatch] = useReducer(
