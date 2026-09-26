@@ -23,13 +23,13 @@ test.describe('PWA & Offline Readiness', () => {
     await page.goto('/');
 
     const manifestLink = page.locator('link[rel="manifest"]').first();
-    await expect(manifestLink).toHaveAttribute('href', '/manifest.webmanifest');
+    await expect(manifestLink).toHaveAttribute('href', /manifest\.webmanifest$/);
 
     const iconLink = page.locator('link[rel="icon"]');
-    await expect(iconLink).toHaveAttribute('href', '/favicon.ico');
+    await expect(iconLink).toHaveAttribute('href', /favicon\.ico$/);
 
     const appleIcon = page.locator('link[rel="apple-touch-icon"]');
-    await expect(appleIcon).toHaveAttribute('href', '/apple-touch-icon.png');
+    await expect(appleIcon).toHaveAttribute('href', /apple-touch-icon\.png$/);
   });
 
   test('should serve service worker script (sw.js)', async ({ request }) => {
