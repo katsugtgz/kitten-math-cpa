@@ -1,14 +1,17 @@
 # 🐱 Kitten Math: Singapore CPA Ten-Frame Adventure
 
 [![CI/CD & GitHub Pages](https://github.com/katsugtgz/kitten-math-cpa/actions/workflows/ci.yml/badge.svg)](https://github.com/katsugtgz/kitten-math-cpa/actions/workflows/ci.yml)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen)](https://katsugtgz.github.io/kitten-math-cpa/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://katsugtgz.github.io/kitten-math-cpa/)
 [![React Doctor Score](https://img.shields.io/badge/React%20Doctor-100%2F100-success)](https://react.doctor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable%20%26%20Offline-orange.svg)](https://web.dev/progressive-web-apps/)
 
-An interactive, colorful **Progressive Web App (PWA)** for early childhood mathematics learning engineered around the Singapore Math **Concrete-Pictorial-Abstract (CPA)** framework.
+> 🌐 **Live Demo & PWA**: [https://katsugtgz.github.io/kitten-math-cpa/](https://katsugtgz.github.io/kitten-math-cpa/)  
+> 🏷️ **Tags**: `singapore-math` · `cpa-framework` · `math-game` · `ten-frame` · `pwa` · `react` · `vite` · `tailwind` · `tdd` · `educational-game`
 
-🎮 **Live Application**: [https://katsugtgz.github.io/kitten-math-cpa/](https://katsugtgz.github.io/kitten-math-cpa/)
+## 📖 About
+
+An interactive, colorful **Progressive Web App (PWA)** for early childhood mathematics learning engineered around the Singapore Math **Concrete-Pictorial-Abstract (CPA)** framework.
 
 Inspired by physical Montessori and Singapore Math manipulatives, Kitten Math features cute kitten mascots peeking over ten-frame cards, tactile red & black counters, an origami paper tray bank, a 1-20 number track strip, and an interactive number bond engine.
 
