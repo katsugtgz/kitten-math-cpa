@@ -1,11 +1,14 @@
 # 🐱 Kitten Math: Singapore CPA Ten-Frame Adventure
 
-[![CI](https://github.com/example/kitten-math-cpa/actions/workflows/ci.yml/badge.svg)](https://github.com/example/kitten-math-cpa/actions/workflows/ci.yml)
+[![CI/CD & GitHub Pages](https://github.com/katsugtgz/kitten-math-cpa/actions/workflows/ci.yml/badge.svg)](https://github.com/katsugtgz/kitten-math-cpa/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen)](https://katsugtgz.github.io/kitten-math-cpa/)
 [![React Doctor Score](https://img.shields.io/badge/React%20Doctor-100%2F100-success)](https://react.doctor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable%20%26%20Offline-orange.svg)](https://web.dev/progressive-web-apps/)
 
 An interactive, colorful **Progressive Web App (PWA)** for early childhood mathematics learning engineered around the Singapore Math **Concrete-Pictorial-Abstract (CPA)** framework.
+
+🎮 **Live Application**: [https://katsugtgz.github.io/kitten-math-cpa/](https://katsugtgz.github.io/kitten-math-cpa/)
 
 Inspired by physical Montessori and Singapore Math manipulatives, Kitten Math features cute kitten mascots peeking over ten-frame cards, tactile red & black counters, an origami paper tray bank, a 1-20 number track strip, and an interactive number bond engine.
 
@@ -128,7 +131,7 @@ Every layer of the application is validated with rigorous test coverage:
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/example/kitten-math-cpa.git
+git clone https://github.com/katsugtgz/kitten-math-cpa.git
 cd kitten-math-cpa
 
 # Install dependencies
