@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import type { GameState, GameAction } from '../../state/types';
 import type { SubitizeProblem } from '../../domain/types';
 import { KittenCard } from './KittenCard';
-import { soundService } from '../../services/sound-service';
 import { TypoText } from '../common/TypoText';
 import type { MascotCoat, MascotEmotion, MascotPawState } from '../common/KittenMascot';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface PictorialModeViewProps {
   readonly state: GameState;
@@ -54,6 +54,7 @@ export function PictorialModeView({
 }: PictorialModeViewProps): React.JSX.Element {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
+  const { audio } = useAudio();
 
   const activeProblem = state.activeProblem as SubitizeProblem | null;
   const isAnswered = state.lastAnswerFeedback !== null;
@@ -66,26 +67,16 @@ export function PictorialModeView({
     if (isCorrect) return;
     setIsRetrying(false);
     setSelectedAnswer(option);
-
-    if (activeProblem) {
-      if (option === activeProblem.targetCount) {
-        soundService.playCorrect(state.streak + 1);
-      } else {
-        soundService.playTryAgain();
-      }
-    }
-
     dispatch({ type: 'SUBMIT_ANSWER', answer: option });
   };
 
   const handleRetry = (): void => {
-    soundService.playButtonClick();
+    audio.playButtonClick();
     setIsRetrying(true);
     setSelectedAnswer(null);
   };
 
   const handleNextProblem = (): void => {
-    soundService.playCardFlip();
     setIsRetrying(false);
     setSelectedAnswer(null);
     dispatch({ type: 'NEXT_PROBLEM' });

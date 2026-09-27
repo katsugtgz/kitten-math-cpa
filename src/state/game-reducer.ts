@@ -1,17 +1,13 @@
 import type {
   ActiveProblem,
+  CelebrationMilestone,
   GameAction,
   GameState,
   GameMode,
   StageLevel,
 } from './types';
-import {
-  calculateScore,
-  checkCelebrationTrigger,
-  evaluateAnswer,
-  getStageCapacity,
-  shouldTriggerScaffold,
-} from './progression';
+import type { FrameCapacity } from '../domain/types';
+import { asDomainProblem } from '../domain/adapter';
 import {
   clearGrid,
   createEmptyGrid,
@@ -20,8 +16,172 @@ import {
   setGridCapacity,
 } from '../domain/ten-frame';
 import { generateSubitizeProblem } from '../domain/subitize';
-import { generateFriendsOfTenBond, generateNumberBond, generateTeenBond } from '../domain/number-bond';
+import {
+  generateFriendsOfTenBond,
+  generateNumberBond,
+  generateTeenBond,
+} from '../domain/number-bond';
 import { generateEquation } from '../domain/equation';
+
+export { asDomainProblem };
+
+// ============================================================================
+// Authoritative Progression Configuration & Invariants
+// ============================================================================
+
+/**
+ * Authoritative progression and gamification configuration constants.
+ */
+export const PROGRESSION_CONFIG = Object.freeze({
+  BASE_SCORE: 100,
+  SCAFFOLD_CONSECUTIVE_ERRORS: 2,
+  CELEBRATION_MILESTONES: Object.freeze([3, 5, 10] as const),
+  STREAK_TIERS: Object.freeze([
+    { minStreak: 10, multiplier: 2.0 },
+    { minStreak: 5, multiplier: 1.5 },
+    { minStreak: 3, multiplier: 1.2 },
+    { minStreak: 0, multiplier: 1.0 },
+  ] as const),
+  STAGE_CAPACITIES: Object.freeze({
+    1: 10 as FrameCapacity,
+    2: 10 as FrameCapacity,
+    3: 20 as FrameCapacity,
+    4: 20 as FrameCapacity,
+  } as const),
+});
+
+export const BASE_SCORE = PROGRESSION_CONFIG.BASE_SCORE;
+export const CELEBRATION_MILESTONES = PROGRESSION_CONFIG.CELEBRATION_MILESTONES;
+export const SCAFFOLD_ERROR_THRESHOLD = PROGRESSION_CONFIG.SCAFFOLD_CONSECUTIVE_ERRORS;
+export const STAGE_CAPACITIES = PROGRESSION_CONFIG.STAGE_CAPACITIES;
+
+// ============================================================================
+// Progression Calculation Functions (Authoritative Engine)
+// ============================================================================
+
+/**
+ * Calculates score multiplier based on current streak count.
+ * Driven by STREAK_TIERS so config and behavior cannot drift apart.
+ */
+export function calculateMultiplier(streak: number): number {
+  const tier = PROGRESSION_CONFIG.STREAK_TIERS.find((t) => streak >= t.minStreak);
+  return tier ? tier.multiplier : 1.0;
+}
+
+/**
+ * Calculates points awarded for a correct answer:
+ * Points = round(baseScore * multiplier) + max(0, bonus)
+ */
+export function calculateScore(
+  baseScore: number = PROGRESSION_CONFIG.BASE_SCORE,
+  streak: number,
+  bonus: number = 0
+): { points: number; multiplier: number } {
+  const multiplier = calculateMultiplier(streak);
+  const safeBonus = Math.max(0, bonus);
+  const points = Math.round(baseScore * multiplier) + safeBonus;
+  return { points, multiplier };
+}
+
+/**
+ * Checks whether the streak count triggers a celebratory milestone.
+ * Driven by CELEBRATION_MILESTONES so config and behavior cannot drift apart.
+ */
+export function checkCelebrationTrigger(streak: number): {
+  isCelebrating: boolean;
+  milestone: CelebrationMilestone | null;
+} {
+  const isMilestone = (PROGRESSION_CONFIG.CELEBRATION_MILESTONES as readonly number[]).includes(
+    streak
+  );
+  if (isMilestone) {
+    return {
+      isCelebrating: true,
+      milestone: streak as CelebrationMilestone,
+    };
+  }
+  return {
+    isCelebrating: false,
+    milestone: null,
+  };
+}
+
+/**
+ * Determines whether pedagogical visual scaffolding should be activated.
+ * Activates on 2 or more consecutive errors.
+ */
+export function shouldTriggerScaffold(consecutiveErrors: number): boolean {
+  return consecutiveErrors >= PROGRESSION_CONFIG.SCAFFOLD_CONSECUTIVE_ERRORS;
+}
+
+/**
+ * Maps curriculum stage to standard ten-frame capacity.
+ * Stages 1-2: 10, Stages 3-4: 20.
+ */
+export function getStageCapacity(stage: StageLevel): FrameCapacity {
+  return PROGRESSION_CONFIG.STAGE_CAPACITIES[stage] ?? (stage <= 2 ? 10 : 20);
+}
+
+/**
+ * Extracts expected numeric answer for any ActiveProblem via polymorphic domain inspection.
+ * Checks polymorphic method first, delegating to asDomainProblem for adapted legacy test fixtures.
+ * Unsupported problem types fail closed (null) — same gate as asDomainProblem.
+ */
+export function getCorrectAnswer(problem: ActiveProblem): number | null {
+  if (!problem) return null;
+
+  const p = problem as unknown as Record<string, unknown>;
+  const isSupportedType =
+    p.type === 'subitize' || p.type === 'number-bond' || p.type === 'equation';
+
+  if (isSupportedType && typeof p.getExpectedAnswer === 'function') {
+    return (p.getExpectedAnswer as () => number)();
+  }
+
+  const domainProblem = asDomainProblem(problem);
+  return domainProblem ? domainProblem.getExpectedAnswer() : null;
+}
+
+/**
+ * Evaluates whether a user's answer is correct for the active problem.
+ * Uses authoritative polymorphic domain validation with zero type-sniffing.
+ * Unsupported problem types fail closed (false) — same gate as asDomainProblem.
+ */
+export function evaluateAnswer(problem: ActiveProblem, answer: number): boolean {
+  if (!problem || typeof answer !== 'number' || !Number.isFinite(answer)) {
+    return false;
+  }
+
+  const p = problem as unknown as Record<string, unknown>;
+  const isSupportedType =
+    p.type === 'subitize' || p.type === 'number-bond' || p.type === 'equation';
+
+  if (isSupportedType && typeof p.validate === 'function') {
+    return (p.validate as (ans: number) => boolean)(answer);
+  }
+
+  const domainProblem = asDomainProblem(problem);
+  return domainProblem ? domainProblem.validate(answer) : false;
+}
+
+/**
+ * Authoritatively evaluates a user's answer for a game session across all CPA modes.
+ */
+export function evaluateSessionAnswer(state: GameState, answer: number): boolean {
+  if (typeof answer !== 'number' || !Number.isFinite(answer)) {
+    return false;
+  }
+
+  if (state.activeProblem) {
+    return evaluateAnswer(state.activeProblem, answer);
+  }
+
+  if (state.mode === 'concrete') {
+    return answer === state.grid.totalCount;
+  }
+
+  return false;
+}
 
 /**
  * Generates an active problem appropriate for the given mode and stage.
@@ -68,10 +228,11 @@ export function createInitialState(options?: {
   bestStreak?: number;
 }): GameState {
   const stage = options?.stage ?? 1;
+  const domainProblem = asDomainProblem(options?.activeProblem);
   const mode =
     options?.mode ??
-    (options?.activeProblem
-      ? 'targetCount' in options.activeProblem
+    (domainProblem
+      ? domainProblem.type === 'subitize'
         ? 'pictorial'
         : 'abstract'
       : 'concrete');
@@ -170,6 +331,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'MOVE_COUNTER': {
       const { fromIndex, toIndex } = action;
       if (
+        typeof fromIndex !== 'number' ||
+        !Number.isInteger(fromIndex) ||
+        typeof toIndex !== 'number' ||
+        !Number.isInteger(toIndex) ||
         fromIndex < 0 ||
         fromIndex >= state.grid.capacity ||
         toIndex < 0 ||
@@ -222,18 +387,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'SUBMIT_ANSWER': {
-      // Evaluate correctness against activeProblem, or against grid totalCount in concrete mode
-      const isCorrect =
-        evaluateAnswer(state.activeProblem, action.answer) ||
-        (state.activeProblem === null &&
-          state.mode === 'concrete' &&
-          action.answer === state.grid.totalCount);
+      const isCorrect = evaluateSessionAnswer(state, action.answer);
 
       if (isCorrect) {
         const newStreak = state.streak + 1;
         const newBestStreak = Math.max(state.bestStreak, newStreak);
-        const bonus = action.bonus ?? 0;
-        const { points } = calculateScore(100, newStreak, bonus);
+        const { points } = calculateScore(PROGRESSION_CONFIG.BASE_SCORE, newStreak, action.bonus);
         const { isCelebrating, milestone } = checkCelebrationTrigger(newStreak);
 
         return Object.freeze({
@@ -315,6 +474,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'SET_STAGE': {
       const { stage, problem } = action;
+      if (stage !== 1 && stage !== 2 && stage !== 3 && stage !== 4) {
+        return state;
+      }
 
       // If switching to the exact same stage and no new problem fixture provided
       if (state.stage === stage && problem === undefined) {

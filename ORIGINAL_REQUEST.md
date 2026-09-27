@@ -58,3 +58,43 @@ Integrity mode: development
 - [ ] npm run build generates optimized production PWA bundle with zero build errors.
 - [ ] .github/workflows/ci.yml is valid YAML and includes all quality gates using modern stable action versions.
 - [ ] Comprehensive documentation in README.md including game rules, architecture, CPA pedagogical guide, and release tags.
+
+
+## Follow-up — 2026-09-26T02:01:26Z
+
+Refactor kitten-math-cpa codebase implementing all 4 architectural deepening candidates (Domain Problem polymorphism, Event-driven Audio Port seam, Concrete Manipulative Workbench deepening, and GameSession state engine consolidation) to maximize depth, testability, and locality while preserving all game functionality.
+
+Working directory: C:\Users\asd\mathgameagy  
+Integrity mode: development
+
+## Verification Resources
+- Vitest unit/integration suite: `rtk vitest run` (18 test files, 206 tests)
+- TypeScript typechecker: `rtk tsc --noEmit`
+- Playwright E2E suite: `rtk playwright test` (`e2e/concrete-mode.spec.ts`)
+
+## Requirements
+
+### R1. Domain Problem Polymorphism
+Introduce deep polymorphic domain problem interface (`validate(answer: number): boolean`, `getExpectedAnswer(): number`) across Subitize, Number Bond, and Equation models. Reclaim orphaned domain validators (`validateSubitizeAnswer`, `validateNumberBondAnswer`, `validateEquationAnswer`) and eliminate type-sniffing switches in state and presentation views.
+
+### R2. Event-Driven Audio Port & Adapters
+Introduce `AudioPort` seam satisfied by production Web Audio synthesizer and silent test adapter. Eliminate imperative singleton `soundService` calls and answer evaluation from presentation views; trigger sound effects reactively from state transitions (`lastAnswerFeedback`, streak milestones).
+
+### R3. Deep Manipulative Workbench Module
+Deepen concrete manipulatives by collapsing `PaperTray`, `TenFrameGrid`, and touch/drag coordinate math into unified `ManipulativeWorkbench` component. Shrink public surface from 24 props to 2 (`grid`, `dispatch`).
+
+### R4. GameSession State Engine Consolidation
+Consolidate shallow pure functions in `src/state/progression.ts` behind authoritative `gameReducer` seam. Enforce progression invariants internally rather than exposing fragmented helpers.
+
+## Acceptance Criteria
+
+### Verification & Regressions
+- [ ] All 206 existing Vitest tests pass (`rtk vitest run`)
+- [ ] Zero TypeScript errors (`rtk tsc --noEmit`)
+- [ ] Playwright E2E tests pass (`rtk playwright test`)
+
+### Architecture & Seams
+- [ ] Zero problem type-sniffing switches in `src/state/` or presentation views
+- [ ] Zero answer calculation or sound singleton calls in `AbstractModeView`, `PictorialModeView`, or `ConcreteModeView`
+- [ ] `PaperTray` and `TenFrameGrid` prop surface collapsed to deep module interface
+- [ ] Domain validators active in production path through polymorphic calls

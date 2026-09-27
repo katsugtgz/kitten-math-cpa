@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
-import { soundService } from '../../services/sound-service';
+import { useAudio } from '../../services/audio/use-audio';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -12,6 +12,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallBanner(): React.JSX.Element | null {
+  const { audio } = useAudio();
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
@@ -33,7 +34,7 @@ export function InstallBanner(): React.JSX.Element | null {
   }
 
   const handleInstallClick = async (): Promise<void> => {
-    soundService.playButtonClick();
+    audio.playButtonClick();
     try {
       await installPrompt.prompt();
       const choiceResult = await installPrompt.userChoice;
@@ -46,7 +47,7 @@ export function InstallBanner(): React.JSX.Element | null {
   };
 
   const handleDismiss = (): void => {
-    soundService.playButtonClick();
+    audio.playButtonClick();
     setIsDismissed(true);
   };
 

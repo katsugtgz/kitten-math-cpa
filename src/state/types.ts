@@ -5,6 +5,12 @@ import type {
   SubitizeProblem,
   NumberBondProblem,
   EquationProblem,
+  BaseDomainProblem,
+  DomainProblem,
+  DomainSubitizeProblem,
+  DomainNumberBondProblem,
+  DomainEquationProblem,
+  ProblemType,
 } from '../domain/types';
 
 export type {
@@ -14,6 +20,12 @@ export type {
   SubitizeProblem,
   NumberBondProblem,
   EquationProblem,
+  BaseDomainProblem,
+  DomainProblem,
+  DomainSubitizeProblem,
+  DomainNumberBondProblem,
+  DomainEquationProblem,
+  ProblemType,
 };
 
 /**
@@ -34,9 +46,10 @@ export type GameMode = 'concrete' | 'pictorial' | 'abstract';
 export type StageLevel = 1 | 2 | 3 | 4;
 
 /**
- * Union of all active challenge problems
+ * Union of all active challenge problems (polymorphic domain problem, legacy fixture, or null)
  */
 export type ActiveProblem =
+  | DomainProblem
   | SubitizeProblem
   | NumberBondProblem
   | EquationProblem

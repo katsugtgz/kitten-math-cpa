@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { KittenMascot } from '../common/KittenMascot';
-import { soundService } from '../../services/sound-service';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface CelebrationModalProps {
   readonly isOpen: boolean;
@@ -15,12 +15,7 @@ export function CelebrationModal({
   milestone,
   onDismiss,
 }: CelebrationModalProps): React.JSX.Element | null {
-  useEffect(() => {
-    if (isOpen) {
-      soundService.playCelebrationFanfare();
-    }
-  }, [isOpen]);
-
+  const { audio } = useAudio();
   if (!isOpen) return null;
 
   const milestoneTitle =
@@ -92,7 +87,7 @@ export function CelebrationModal({
         <button
           type="button"
           onClick={() => {
-            soundService.playButtonClick();
+            audio.playButtonClick();
             onDismiss();
           }}
           autoFocus

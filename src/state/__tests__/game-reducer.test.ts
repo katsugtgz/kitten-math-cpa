@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { gameReducer, createInitialState } from '../game-reducer';
 import type { GameState } from '../types';
 import type { CellState, SubitizeProblem, NumberBondProblem } from '../../domain/types';
+import { createSubitizeProblem, createNumberBondProblem } from '../../domain/types';
 
 describe('Game Reducer State Machine (src/state/game-reducer.ts)', () => {
   describe('Initial State & Purity', () => {
@@ -32,27 +33,27 @@ describe('Game Reducer State Machine (src/state/game-reducer.ts)', () => {
     });
 
     it('infers mode from activeProblem when mode option is omitted', () => {
-      const subitizeProblem: SubitizeProblem = {
+      const subitizeProblem: SubitizeProblem = createSubitizeProblem({
         id: 'sub-test',
         targetCount: 4,
         redCount: 4,
         blackCount: 0,
         options: [2, 3, 4, 5],
         layout: 'single',
-      };
+      });
       const statePictorial = createInitialState({ activeProblem: subitizeProblem });
       expect(statePictorial.mode).toBe('pictorial');
       expect(statePictorial.activeProblem).toBe(subitizeProblem);
       expect(Object.isFrozen(statePictorial.grid)).toBe(true);
 
-      const nbProblem: NumberBondProblem = {
+      const nbProblem: NumberBondProblem = createNumberBondProblem({
         id: 'nb-test',
         whole: 10,
         partA: 7,
         partB: 3,
         missing: 'partB',
         answer: 3,
-      };
+      });
       const stateAbstract = createInitialState({ activeProblem: nbProblem });
       expect(stateAbstract.mode).toBe('abstract');
       expect(stateAbstract.activeProblem).toBe(nbProblem);
@@ -167,14 +168,14 @@ describe('Game Reducer State Machine (src/state/game-reducer.ts)', () => {
   });
 
   describe('Answer Submission & Progression Scoring', () => {
-    const mockProblem: SubitizeProblem = {
+    const mockProblem: SubitizeProblem = createSubitizeProblem({
       id: 'test-1',
       targetCount: 6,
       redCount: 5,
       blackCount: 1,
       options: [4, 5, 6, 7],
       layout: 'single',
-    };
+    });
 
     it('increments score, streak, bestStreak on correct answer', () => {
       const initial = createInitialState({ activeProblem: mockProblem });
@@ -258,14 +259,14 @@ describe('Game Reducer State Machine (src/state/game-reducer.ts)', () => {
   });
 
   describe('Mode and Stage Transitions', () => {
-    const nbProblem: NumberBondProblem = {
+    const nbProblem: NumberBondProblem = createNumberBondProblem({
       id: 'nb-test',
       whole: 5,
       partA: 3,
       partB: 2,
       missing: 'whole',
       answer: 5,
-    };
+    });
 
     it('switches mode and updates active problem', () => {
       let state = createInitialState({ mode: 'concrete' });

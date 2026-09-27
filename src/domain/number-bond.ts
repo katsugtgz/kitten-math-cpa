@@ -1,4 +1,4 @@
-import { NumberBondMissing, NumberBondProblem } from './types';
+import { DomainNumberBondProblem, NumberBondMissing, NumberBondProblem } from './types';
 
 export interface NumberBondOptions {
   minWhole?: number;
@@ -12,7 +12,7 @@ export interface NumberBondOptions {
 /**
  * Generates a Singapore Math Number Bond problem (Part-Part-Whole).
  */
-export function generateNumberBond(options?: NumberBondOptions): NumberBondProblem {
+export function generateNumberBond(options?: NumberBondOptions): DomainNumberBondProblem {
   const randomFn = options?.randomFn ?? Math.random;
   const allowZero = options?.allowZero ?? false;
   const minWhole = options?.minWhole ?? 2;
@@ -66,14 +66,23 @@ export function generateNumberBond(options?: NumberBondOptions): NumberBondProbl
 
   const id = `nb-${Date.now()}-${Math.floor(randomFn() * 100000)}`;
 
-  return {
+  const problem: DomainNumberBondProblem = {
     id,
+    type: 'number-bond',
     whole,
     partA,
     partB,
     missing,
     answer,
+    validate(this: NumberBondProblem | void, userAnswer: number): boolean {
+      return validateNumberBondAnswer(this ?? problem, userAnswer);
+    },
+    getExpectedAnswer(this: NumberBondProblem | void): number {
+      return (this ?? problem).answer;
+    },
   };
+
+  return problem;
 }
 
 /**
@@ -87,7 +96,7 @@ export const generateNumberBondProblem = generateNumberBond;
 export function generateFriendsOfTenBond(
   missing?: NumberBondMissing,
   randomFn?: () => number
-): NumberBondProblem {
+): DomainNumberBondProblem {
   return generateNumberBond({
     minWhole: 10,
     maxWhole: 10,
@@ -102,7 +111,7 @@ export function generateFriendsOfTenBond(
 export function generateTeenBond(
   missing?: NumberBondMissing,
   randomFn?: () => number
-): NumberBondProblem {
+): DomainNumberBondProblem {
   return generateNumberBond({
     minWhole: 11,
     maxWhole: 19,

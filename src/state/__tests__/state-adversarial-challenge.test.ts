@@ -5,6 +5,7 @@ import {
 } from '../progression';
 import type { GameState, GameAction, GameMode, StageLevel } from '../types';
 import type { SubitizeProblem } from '../../domain/types';
+import { createSubitizeProblem } from '../../domain/types';
 
 /**
  * Seeded deterministic pseudo-random number generator (Mulberry32).
@@ -217,14 +218,14 @@ describe('Adversarial Challenger: Game State Machine & Progression', () => {
   });
 
   describe('Challenge 3: Streak Progression, Multipliers & Milestone Celebrations', () => {
-    const mockProblem: SubitizeProblem = {
+    const mockProblem: SubitizeProblem = createSubitizeProblem({
       id: 'sub-fix',
       targetCount: 5,
       redCount: 5,
       blackCount: 0,
       options: [3, 4, 5, 6],
       layout: 'single',
-    };
+    });
 
     it('verifies exact mathematical score tiers and multipliers from streak 0 to 12', () => {
       let state = createInitialState({ activeProblem: mockProblem });
@@ -299,14 +300,14 @@ describe('Adversarial Challenger: Game State Machine & Progression', () => {
   });
 
   describe('Challenge 4: Dynamic Scaffolding Trigger & Clear Mechanics', () => {
-    const mockProblem: SubitizeProblem = {
+    const mockProblem: SubitizeProblem = createSubitizeProblem({
       id: 'sub-scaffold',
       targetCount: 4,
       redCount: 4,
       blackCount: 0,
       options: [2, 3, 4, 5],
       layout: 'single',
-    };
+    });
 
     it('activates scaffoldActive on EXACTLY 2 consecutive errors and clears on 1 correct answer', () => {
       let state = createInitialState({ mode: 'pictorial', activeProblem: mockProblem });
@@ -382,14 +383,14 @@ describe('Adversarial Challenger: Game State Machine & Progression', () => {
       expect(state.scaffoldActive).toBe(true);
 
       // User skips to next problem
-      const nextProblem: SubitizeProblem = {
+      const nextProblem: SubitizeProblem = createSubitizeProblem({
         id: 'sub-next',
         targetCount: 3,
         redCount: 3,
         blackCount: 0,
         options: [1, 2, 3, 4],
         layout: 'single',
-      };
+      });
       state = gameReducer(state, { type: 'NEXT_PROBLEM', problem: nextProblem });
 
       expect(state.activeProblem).toBe(nextProblem);

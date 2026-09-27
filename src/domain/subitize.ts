@@ -1,5 +1,5 @@
 import { createPopulatedFrame, createTeenDecomposition } from './ten-frame';
-import { SubitizeLayout, SubitizeProblem } from './types';
+import { DomainSubitizeProblem, SubitizeLayout, SubitizeProblem } from './types';
 
 export interface SubitizeOptions {
   range?: 'perceptual' | 'conceptual-single' | 'conceptual-double' | 'any';
@@ -79,7 +79,7 @@ export function generateDistractors(
 export function generateSubitizeProblem(
   targetCount?: number,
   options?: SubitizeOptions
-): SubitizeProblem {
+): DomainSubitizeProblem {
   const randomFn = options?.randomFn ?? Math.random;
   const range = options?.range ?? 'any';
 
@@ -144,27 +144,36 @@ export function generateSubitizeProblem(
 
   const id = `subitize-${Date.now()}-${Math.floor(randomFn() * 100000)}`;
 
-  return {
+  const problem: DomainSubitizeProblem = {
     id,
+    type: 'subitize',
     targetCount: count,
     redCount,
     blackCount,
     options: Object.freeze(choices),
     layout,
     grid,
+    validate(this: SubitizeProblem | void, answer: number): boolean {
+      return validateSubitizeAnswer(this ?? problem, answer);
+    },
+    getExpectedAnswer(this: SubitizeProblem | void): number {
+      return (this ?? problem).targetCount;
+    },
   };
+
+  return problem;
 }
 
 export function generatePerceptualProblem(
   randomFn?: () => number
-): SubitizeProblem {
+): DomainSubitizeProblem {
   return generateSubitizeProblem(undefined, { range: 'perceptual', layout: 'single', randomFn });
 }
 
 export function generateConceptualProblem(
   layout: SubitizeLayout = 'single',
   randomFn?: () => number
-): SubitizeProblem {
+): DomainSubitizeProblem {
   const range = layout === 'single' ? 'conceptual-single' : 'conceptual-double';
   return generateSubitizeProblem(undefined, { range, layout, randomFn });
 }
