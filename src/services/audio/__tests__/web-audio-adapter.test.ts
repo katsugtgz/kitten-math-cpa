@@ -93,7 +93,7 @@ describe('WebAudioSynthesizer', () => {
     createBufferSourceSpy.mockRestore();
   });
 
-  it('dispose removes gesture unlock listeners from window', () => {
+  it('dispose removes gesture unlock listeners from window and closes the AudioContext', () => {
     const addSpy = vi.spyOn(window, 'addEventListener');
     const removeSpy = vi.spyOn(window, 'removeEventListener');
     addSpy.mockClear();
@@ -101,17 +101,31 @@ describe('WebAudioSynthesizer', () => {
 
     const fresh = new WebAudioSynthesizer();
     expect(addSpy).toHaveBeenCalledTimes(3);
-    expect(removeSpy).not.toHaveBeenCalled();
+    // Record the exact callback the constructor registered per event
+    const registered = ['pointerdown', 'touchstart', 'keydown'].map((event) => ({
+      event,
+      callback: addSpy.mock.calls.find(([name]) => name === event)?.[1] as () => void,
+    }));
+    registered.forEach(({ callback }) => expect(callback).toBeInstanceOf(Function));
+
+    // Force context creation, then dispose
+    fresh.playCounterPlace(true);
+    const ctx = (fresh as unknown as { ctx: AudioContext }).ctx;
+    expect(ctx).toBeDefined();
+    const closeSpy = vi.spyOn(ctx, 'close');
 
     fresh.dispose();
     expect(removeSpy).toHaveBeenCalledTimes(3);
-    expect(removeSpy).toHaveBeenCalledWith('pointerdown', expect.any(Function));
-    expect(removeSpy).toHaveBeenCalledWith('touchstart', expect.any(Function));
-    expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    // Removed callbacks are exactly the ones the constructor added
+    registered.forEach(({ event, callback }) => {
+      expect(removeSpy).toHaveBeenCalledWith(event, callback);
+    });
+    expect(closeSpy).toHaveBeenCalledTimes(1);
 
     // Second dispose is a safe no-op
     fresh.dispose();
     expect(removeSpy).toHaveBeenCalledTimes(3);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
 
     addSpy.mockRestore();
     removeSpy.mockRestore();

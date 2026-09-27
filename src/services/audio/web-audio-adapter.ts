@@ -49,12 +49,28 @@ export class WebAudioSynthesizer implements AudioPort {
   }
 
   /**
-   * Releases window-level resources (gesture unlock listeners). Safe to call
-   * multiple times. Short-lived instances in tests and HMR-reinstantiated
-   * singletons must not accumulate handlers on window.
+   * Releases window-level resources (gesture unlock listeners) and closes the
+   * AudioContext. Safe to call multiple times; initAudioContext recreates the
+   * context on the next play* call. Short-lived instances in tests and
+   * HMR-reinstantiated singletons must not accumulate handlers or contexts.
    */
   public dispose(): void {
     this.detachGestureUnlock();
+    if (this.ctx) {
+      const ctx = this.ctx;
+      this.ctx = null;
+      this.masterGain = null;
+      try {
+        const maybePromise = ctx.close() as unknown as Promise<void> | undefined;
+        if (maybePromise && typeof maybePromise.catch === 'function') {
+          maybePromise.catch(() => {
+            // Context already closed or unsupported: nothing to reclaim.
+          });
+        }
+      } catch {
+        // Legacy synchronous close failure: nothing to reclaim.
+      }
+    }
   }
 
   private loadMutedState(): boolean {
