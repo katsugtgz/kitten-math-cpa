@@ -125,12 +125,16 @@ export function getStageCapacity(stage: StageLevel): FrameCapacity {
 /**
  * Extracts expected numeric answer for any ActiveProblem via polymorphic domain inspection.
  * Checks polymorphic method first, delegating to asDomainProblem for adapted legacy test fixtures.
+ * Unsupported problem types fail closed (null) — same gate as asDomainProblem.
  */
 export function getCorrectAnswer(problem: ActiveProblem): number | null {
   if (!problem) return null;
 
   const p = problem as unknown as Record<string, unknown>;
-  if (typeof p.getExpectedAnswer === 'function') {
+  const isSupportedType =
+    p.type === 'subitize' || p.type === 'number-bond' || p.type === 'equation';
+
+  if (isSupportedType && typeof p.getExpectedAnswer === 'function') {
     return (p.getExpectedAnswer as () => number)();
   }
 
@@ -141,6 +145,7 @@ export function getCorrectAnswer(problem: ActiveProblem): number | null {
 /**
  * Evaluates whether a user's answer is correct for the active problem.
  * Uses authoritative polymorphic domain validation with zero type-sniffing.
+ * Unsupported problem types fail closed (false) — same gate as asDomainProblem.
  */
 export function evaluateAnswer(problem: ActiveProblem, answer: number): boolean {
   if (!problem || typeof answer !== 'number' || !Number.isFinite(answer)) {
@@ -148,7 +153,10 @@ export function evaluateAnswer(problem: ActiveProblem, answer: number): boolean 
   }
 
   const p = problem as unknown as Record<string, unknown>;
-  if (typeof p.validate === 'function') {
+  const isSupportedType =
+    p.type === 'subitize' || p.type === 'number-bond' || p.type === 'equation';
+
+  if (isSupportedType && typeof p.validate === 'function') {
     return (p.validate as (ans: number) => boolean)(answer);
   }
 

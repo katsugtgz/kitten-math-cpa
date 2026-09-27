@@ -263,6 +263,18 @@ describe('Milestone 1 Empirical Challenger: Domain Problem Polymorphism & State 
       expect(adapted1).toBe(adapted2);
       expect(adapted1).not.toBe(raw);
     });
+
+    it('fails closed for impostor problems with unsupported type discriminators', () => {
+      const impostor = {
+        id: 'fake-1',
+        type: 'quantum-bond',
+        validate: (answer: number): boolean => answer === 42,
+        getExpectedAnswer: (): number => 42,
+      } as unknown as ActiveProblem;
+
+      expect(evaluateAnswer(impostor, 42)).toBe(false);
+      expect(getCorrectAnswer(impostor)).toBeNull();
+    });
   });
 
   describe('Task 2: Referential Equality Invariants in gameReducer', () => {

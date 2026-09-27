@@ -93,6 +93,30 @@ describe('WebAudioSynthesizer', () => {
     createBufferSourceSpy.mockRestore();
   });
 
+  it('dispose removes gesture unlock listeners from window', () => {
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    const removeSpy = vi.spyOn(window, 'removeEventListener');
+    addSpy.mockClear();
+    removeSpy.mockClear();
+
+    const fresh = new WebAudioSynthesizer();
+    expect(addSpy).toHaveBeenCalledTimes(3);
+    expect(removeSpy).not.toHaveBeenCalled();
+
+    fresh.dispose();
+    expect(removeSpy).toHaveBeenCalledTimes(3);
+    expect(removeSpy).toHaveBeenCalledWith('pointerdown', expect.any(Function));
+    expect(removeSpy).toHaveBeenCalledWith('touchstart', expect.any(Function));
+    expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+
+    // Second dispose is a safe no-op
+    fresh.dispose();
+    expect(removeSpy).toHaveBeenCalledTimes(3);
+
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+  });
+
   it('triggers haptics when unmuted on supported platforms', () => {
     const vibrateSpy = vi.spyOn(navigator, 'vibrate');
     synth.setMuted(false);

@@ -10,6 +10,7 @@ export class WebAudioSynthesizer implements AudioPort {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private isMuted: boolean = false;
+  private gestureUnlock: (() => void) | null = null;
 
   constructor() {
     this.isMuted = this.loadMutedState();
@@ -27,16 +28,33 @@ export class WebAudioSynthesizer implements AudioPort {
       return;
     }
 
-    const unlock = (): void => {
+    this.gestureUnlock = (): void => {
       this.initAudioContext();
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('touchstart', unlock);
-      window.removeEventListener('keydown', unlock);
+      this.detachGestureUnlock();
     };
 
-    window.addEventListener('pointerdown', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
-    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('pointerdown', this.gestureUnlock, { passive: true });
+    window.addEventListener('touchstart', this.gestureUnlock, { passive: true });
+    window.addEventListener('keydown', this.gestureUnlock, { passive: true });
+  }
+
+  private detachGestureUnlock(): void {
+    if (!this.gestureUnlock || typeof window === 'undefined') {
+      return;
+    }
+    window.removeEventListener('pointerdown', this.gestureUnlock);
+    window.removeEventListener('touchstart', this.gestureUnlock);
+    window.removeEventListener('keydown', this.gestureUnlock);
+    this.gestureUnlock = null;
+  }
+
+  /**
+   * Releases window-level resources (gesture unlock listeners). Safe to call
+   * multiple times. Short-lived instances in tests and HMR-reinstantiated
+   * singletons must not accumulate handlers on window.
+   */
+  public dispose(): void {
+    this.detachGestureUnlock();
   }
 
   private loadMutedState(): boolean {
