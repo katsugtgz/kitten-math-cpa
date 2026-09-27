@@ -4,7 +4,7 @@ import type { CounterColor, GameAction } from '../../state/types';
 import { TenFrameGrid } from './TenFrameGrid';
 import { PaperTray } from './PaperTray';
 import { TactileCounter } from '../common/TactileCounter';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface ManipulativeWorkbenchProps {
   readonly grid: DomainTenFrameGrid;
@@ -170,6 +170,7 @@ export function ManipulativeWorkbench({
     <div
       data-testid="manipulative-workbench"
       className="flex flex-col items-center gap-6 w-full"
+      style={{ touchAction: 'none' }}
     >
       {/* Interactive Ten-Frame Grid */}
       <TenFrameGrid

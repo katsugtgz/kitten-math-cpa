@@ -3,7 +3,7 @@ import type { GameState, GameAction, CounterColor } from '../../state/types';
 import { KittenMascot } from '../common/KittenMascot';
 import { AnimatedNumber } from '../common/AnimatedNumber';
 import { ManipulativeWorkbench } from './ManipulativeWorkbench';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface ConcreteModeViewProps {
   readonly state: GameState;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { KittenMascot } from '../common/KittenMascot';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface CelebrationModalProps {
   readonly isOpen: boolean;

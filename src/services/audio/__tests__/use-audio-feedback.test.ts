@@ -126,6 +126,55 @@ describe('useAudioFeedback', () => {
     expect(audio.calls.playCardFlip).toBe(1);
   });
 
+  it('triggers playCardFlip for the first non-null problem after mount', () => {
+    const { rerender } = renderHook(
+      ({ state }) => useAudioFeedback(state, audio),
+      { initialProps: { state: baseState } }
+    );
+
+    rerender({
+      state: {
+        ...baseState,
+        activeProblem: generateSubitizeProblem(4, { layout: 'single' }),
+      },
+    });
+
+    expect(audio.calls.playCardFlip).toBe(1);
+  });
+
+  it('chimes drag-moves and recolor drops that keep totalCount constant', () => {
+    const concreteBase: GameState = {
+      ...baseState,
+      mode: 'concrete',
+    };
+
+    const { rerender } = renderHook(
+      ({ state }) => useAudioFeedback(state, audio),
+      { initialProps: { state: concreteBase } }
+    );
+
+    // Place red then black (total 0 -> 2), one rerender per placement
+    let grid = placeCounter(concreteBase.grid, 'red');
+    rerender({ state: { ...concreteBase, grid } });
+    grid = placeCounter(grid, 'black');
+    rerender({ state: { ...concreteBase, grid } });
+    expect(audio.calls.playCounterPlace).toHaveLength(2);
+
+    // Drag-move slot 0 -> empty slot 2: same total, same color counts
+    const moved = removeCounter(grid, 0);
+    const movedGrid = placeCounter(moved, 2, 'red');
+    rerender({ state: { ...concreteBase, grid: movedGrid } });
+    expect(audio.calls.playCounterPlace).toHaveLength(3);
+
+    // Recolor slot 1 black -> red: same total, redCount up
+    const recolored = removeCounter(movedGrid, 1);
+    const recoloredGrid = placeCounter(recolored, 1, 'red');
+    rerender({ state: { ...concreteBase, grid: recoloredGrid } });
+    expect(audio.calls.playCounterPlace).toHaveLength(4);
+    // Last chime reflects the newly placed color (red -> isRed true)
+    expect(audio.calls.playCounterPlace[3]).toBe(true);
+  });
+
   it('reacts to counter placements and removals in concrete mode when observeCounters is true', () => {
     const concreteBase: GameState = {
       ...baseState,

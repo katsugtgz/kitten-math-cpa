@@ -24,7 +24,7 @@ export interface AudioPort {
 
   /**
    * Synthesize cheerful ascending chime arpeggio on correct answer.
-   * Dynamically enriches harmonics and note count when streak >= 3.
+   * Extends the arpeggio with an extra note when streak >= 3.
    * @param streak Current consecutive streak count
    */
   playCorrect(streak?: number): void;

@@ -61,13 +61,11 @@ export const STAGE_CAPACITIES = PROGRESSION_CONFIG.STAGE_CAPACITIES;
 
 /**
  * Calculates score multiplier based on current streak count.
- * Multipliers: <3 -> 1.0, 3..4 -> 1.2, 5..9 -> 1.5, >=10 -> 2.0
+ * Driven by STREAK_TIERS so config and behavior cannot drift apart.
  */
 export function calculateMultiplier(streak: number): number {
-  if (streak < 3) return 1.0;
-  if (streak < 5) return 1.2;
-  if (streak < 10) return 1.5;
-  return 2.0;
+  const tier = PROGRESSION_CONFIG.STREAK_TIERS.find((t) => streak >= t.minStreak);
+  return tier ? tier.multiplier : 1.0;
 }
 
 /**
@@ -86,13 +84,17 @@ export function calculateScore(
 }
 
 /**
- * Checks whether the streak count triggers a celebratory milestone (3, 5, 10).
+ * Checks whether the streak count triggers a celebratory milestone.
+ * Driven by CELEBRATION_MILESTONES so config and behavior cannot drift apart.
  */
 export function checkCelebrationTrigger(streak: number): {
   isCelebrating: boolean;
   milestone: CelebrationMilestone | null;
 } {
-  if (streak === 3 || streak === 5 || streak === 10) {
+  const isMilestone = (PROGRESSION_CONFIG.CELEBRATION_MILESTONES as readonly number[]).includes(
+    streak
+  );
+  if (isMilestone) {
     return {
       isCelebrating: true,
       milestone: streak as CelebrationMilestone,

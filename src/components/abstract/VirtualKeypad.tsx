@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface VirtualKeypadProps {
   readonly onDigit: (digit: number) => void;

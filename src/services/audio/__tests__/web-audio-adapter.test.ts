@@ -59,7 +59,16 @@ describe('WebAudioSynthesizer', () => {
 
   it('silences audio synthesis and haptic calls when muted', () => {
     const vibrateSpy = vi.spyOn(navigator, 'vibrate');
+    // Force AudioContext creation while unmuted so node creation is spyable
+    synth.playCounterPlace(true);
+    const ctx = (synth as unknown as { ctx: AudioContext | null }).ctx;
+    expect(ctx).toBeDefined();
+    const createOscillatorSpy = vi.spyOn(ctx!, 'createOscillator');
+    const createGainSpy = vi.spyOn(ctx!, 'createGain');
+    const createBiquadFilterSpy = vi.spyOn(ctx!, 'createBiquadFilter');
+    const createBufferSourceSpy = vi.spyOn(ctx!, 'createBufferSource');
     synth.setMuted(true);
+    vibrateSpy.mockClear();
 
     synth.playCounterPlace(true);
     synth.playCounterRemove();
@@ -71,7 +80,17 @@ describe('WebAudioSynthesizer', () => {
     synth.triggerHaptic(15);
 
     expect(vibrateSpy).not.toHaveBeenCalled();
+    // No audio graph nodes may be created while muted
+    expect(createOscillatorSpy).not.toHaveBeenCalled();
+    expect(createGainSpy).not.toHaveBeenCalled();
+    expect(createBiquadFilterSpy).not.toHaveBeenCalled();
+    expect(createBufferSourceSpy).not.toHaveBeenCalled();
+
     vibrateSpy.mockRestore();
+    createOscillatorSpy.mockRestore();
+    createGainSpy.mockRestore();
+    createBiquadFilterSpy.mockRestore();
+    createBufferSourceSpy.mockRestore();
   });
 
   it('triggers haptics when unmuted on supported platforms', () => {

@@ -13,6 +13,30 @@ export class WebAudioSynthesizer implements AudioPort {
 
   constructor() {
     this.isMuted = this.loadMutedState();
+    this.attachGestureUnlock();
+  }
+
+  /**
+   * Mobile browsers (iOS Safari) only allow AudioContext creation/resume inside
+   * a user gesture. Effect-driven playback (state transitions after commit)
+   * runs outside gestures, so the first unlock is attached to the earliest
+   * pointerdown/touchstart/keydown. Safe no-op in non-browser environments.
+   */
+  private attachGestureUnlock(): void {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return;
+    }
+
+    const unlock = (): void => {
+      this.initAudioContext();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
   }
 
   private loadMutedState(): boolean {
@@ -54,7 +78,7 @@ export class WebAudioSynthesizer implements AudioPort {
   private initAudioContext(): AudioContext | null {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') {
-        void this.ctx.resume();
+        this.resumeContext();
       }
       return this.ctx;
     }
@@ -79,11 +103,30 @@ export class WebAudioSynthesizer implements AudioPort {
       this.masterGain = master;
 
       if (this.ctx.state === 'suspended') {
-        void this.ctx.resume();
+        this.resumeContext();
       }
       return this.ctx;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Mobile browsers reject resume() outside a user gesture; surface the
+   * rejection instead of dropping it so gesture unlock can retry later.
+   */
+  private resumeContext(): void {
+    if (!this.ctx) return;
+    try {
+      const maybePromise = this.ctx.resume() as unknown as Promise<void> | undefined;
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {
+          // Expected when called outside a user gesture; the gesture unlock
+          // listener will retry resume on the next pointerdown/touchstart.
+        });
+      }
+    } catch {
+      // Legacy synchronous throw: ignore, retry happens on next gesture.
     }
   }
 

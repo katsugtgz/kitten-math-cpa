@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];

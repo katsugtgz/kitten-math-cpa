@@ -1,7 +1,8 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useState } from 'react';
 import { createInitialState, gameReducer } from './state/game-reducer';
-import type { GameMode, StageLevel } from './state/types';
-import { AudioProvider, useAudio } from './services/audio/audio-context';
+import type { CounterColor, GameMode, StageLevel } from './state/types';
+import { AudioProvider } from './services/audio/audio-context';
+import { useAudio } from './services/audio/use-audio';
 import { useAudioFeedback } from './services/audio/use-audio-feedback';
 import type { AudioPort } from './services/audio/audio-port';
 import { Header } from './components/hud/Header';
@@ -20,6 +21,9 @@ export interface AppProps {
 function GameApp(): React.JSX.Element {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const { audio, isMuted, toggleMute } = useAudio();
+
+  // Counter color lives at the app root so it survives Concrete mode-view unmounts.
+  const [selectedColor, setSelectedColor] = useState<CounterColor>('red');
 
   // Attach reactive audio feedback listener (observing state transitions and counters)
   useAudioFeedback(state, audio);
@@ -72,7 +76,12 @@ function GameApp(): React.JSX.Element {
         {/* CPA Stage View Routing */}
         <div className="flex-1 flex flex-col items-center justify-start py-2">
           {state.mode === 'concrete' && (
-            <ConcreteModeView state={state} dispatch={dispatch} />
+            <ConcreteModeView
+              state={state}
+              dispatch={dispatch}
+              selectedColor={selectedColor}
+              onSelectColor={setSelectedColor}
+            />
           )}
 
           {state.mode === 'pictorial' && (

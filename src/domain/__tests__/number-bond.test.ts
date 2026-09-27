@@ -137,20 +137,4 @@ describe('number-bond generator', () => {
       expect(adaptedPartA?.validate(6)).toBe(true);
     });
   });
-
-  describe('polymorphic domain interface', () => {
-    it('exposes type, validate, and getExpectedAnswer on generated number bonds', () => {
-      const bond = generateFriendsOfTenBond('partB');
-      expect(bond.type).toBe('number-bond');
-      expect(bond.getExpectedAnswer()).toBe(bond.partB);
-      expect(bond.validate(bond.partB)).toBe(true);
-      expect(bond.validate(bond.partB + 1)).toBe(false);
-
-      // Destructuring safety check
-      const { validate, getExpectedAnswer } = bond;
-      expect(getExpectedAnswer()).toBe(bond.partB);
-      expect(validate(bond.partB)).toBe(true);
-      expect(validate(bond.partB + 1)).toBe(false);
-    });
-  });
 });

@@ -1,7 +1,7 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import type { AudioPort } from './audio-port';
-import { WebAudioSynthesizer } from './web-audio-adapter';
+import { defaultSynthesizer } from './default-synthesizer';
+import { AudioContext } from './audio-context-instance';
 
 export interface AudioContextValue {
   readonly audio: AudioPort;
@@ -9,10 +9,6 @@ export interface AudioContextValue {
   readonly setMuted: (muted: boolean) => void;
   readonly toggleMute: () => void;
 }
-
-export const defaultSynthesizer = new WebAudioSynthesizer();
-
-const AudioContext = createContext<AudioContextValue | null>(null);
 
 export interface AudioProviderProps {
   readonly children: React.ReactNode;
@@ -24,6 +20,17 @@ export function AudioProvider({
   audio = defaultSynthesizer,
 }: AudioProviderProps): React.JSX.Element {
   const [isMuted, setIsMutedState] = useState<boolean>(() => audio.getMuted());
+
+  // Resync mute state when the adapter instance changes: each adapter owns its
+  // mute flag, so a swap without this would keep showing the old adapter's state.
+  const [prevAudio, setPrevAudio] = useState<AudioPort>(audio);
+  if (prevAudio !== audio) {
+    setPrevAudio(audio);
+    const adapterMuted = audio.getMuted();
+    if (adapterMuted !== isMuted) {
+      setIsMutedState(adapterMuted);
+    }
+  }
 
   const setMuted = useCallback(
     (muted: boolean): void => {
@@ -40,28 +47,9 @@ export function AudioProvider({
   }, [audio]);
 
   const value = useMemo<AudioContextValue>(
-    () => ({
-      audio,
-      isMuted,
-      setMuted,
-      toggleMute,
-    }),
+    () => ({ audio, isMuted, setMuted, toggleMute }),
     [audio, isMuted, setMuted, toggleMute]
   );
 
   return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
-}
-
-export function useAudio(): AudioContextValue {
-  const context = useContext(AudioContext);
-  if (!context) {
-    // Resilient fallback for unit tests rendering components in isolation without AudioProvider
-    return {
-      audio: defaultSynthesizer,
-      isMuted: defaultSynthesizer.getMuted(),
-      setMuted: (muted: boolean) => defaultSynthesizer.setMuted(muted),
-      toggleMute: () => defaultSynthesizer.setMuted(!defaultSynthesizer.getMuted()),
-    };
-  }
-  return context;
 }

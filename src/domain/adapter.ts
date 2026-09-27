@@ -23,12 +23,14 @@ const adapterCache = new WeakMap<object, DomainProblem>();
 export function asDomainProblem(problem: ActiveProblem | undefined): DomainProblem | null {
   if (!problem) return null;
 
-  // 1. Direct polymorphic duck-typing: already implements DomainProblem
+  // 1. Direct polymorphic duck-typing: already implements DomainProblem.
+  //    Restricted to the three supported problem types so an unsupported
+  //    discriminator fails closed (null) instead of rendering a blank view.
   const p = problem as unknown as Record<string, unknown>;
   if (
+    (p.type === 'subitize' || p.type === 'number-bond' || p.type === 'equation') &&
     typeof p.validate === 'function' &&
-    typeof p.getExpectedAnswer === 'function' &&
-    typeof p.type === 'string'
+    typeof p.getExpectedAnswer === 'function'
   ) {
     return problem as DomainProblem;
   }

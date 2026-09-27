@@ -36,7 +36,13 @@ dist-ssr
 # Agent brain / temp dirs
 .agents
 .codegraph/
-.claude/
 .commandcode/
 .hermes/
 .qoder/
+.serena/
+
+# Claude: ignore local-only state; shared config (commands/, agents/, settings.json) stays committable.
+# skills/ is a symlink farm into the ignored .agents/ brain — never commit dangling links.
+.claude/skills/
+.claude/settings.local.json
+.claude/*.local.*

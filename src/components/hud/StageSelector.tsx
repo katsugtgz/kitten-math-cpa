@@ -1,6 +1,6 @@
 import React from 'react';
 import type { GameMode, StageLevel } from '../../state/types';
-import { useAudio } from '../../services/audio/audio-context';
+import { useAudio } from '../../services/audio/use-audio';
 
 export interface StageSelectorProps {
   readonly mode: GameMode;

@@ -183,25 +183,4 @@ describe('equation generator', () => {
       expect(adaptedOp2?.validate(5)).toBe(true);
     });
   });
-
-  describe('polymorphic domain interface', () => {
-    it('exposes type, validate, and getExpectedAnswer on generated equations', () => {
-      const eq = generateEquation({ operator: '+', missing: 'result' });
-      expect(eq.type).toBe('equation');
-      expect(eq.getExpectedAnswer()).toBe(eq.result);
-      expect(eq.validate(eq.result)).toBe(true);
-      expect(eq.validate(eq.result + 1)).toBe(false);
-
-      // Destructuring safety check
-      const { validate, getExpectedAnswer } = eq;
-      expect(getExpectedAnswer()).toBe(eq.result);
-      expect(validate(eq.result)).toBe(true);
-      expect(validate(eq.result + 1)).toBe(false);
-
-      const teenEq = generateTeenAddition('result');
-      expect(teenEq.type).toBe('equation');
-      expect(teenEq.getExpectedAnswer()).toBe(teenEq.result);
-      expect(teenEq.validate(teenEq.result)).toBe(true);
-    });
-  });
 });

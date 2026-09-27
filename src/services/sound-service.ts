@@ -1,5 +1,5 @@
 import { WebAudioSynthesizer } from './audio/web-audio-adapter';
-import { defaultSynthesizer } from './audio/audio-context';
+import { defaultSynthesizer } from './audio/default-synthesizer';
 import type { AudioPort } from './audio/audio-port';
 
 export type { AudioPort, AudioPort as ISoundService };

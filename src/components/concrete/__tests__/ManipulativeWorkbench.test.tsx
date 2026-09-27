@@ -63,14 +63,15 @@ describe('ManipulativeWorkbench (Deep Manipulative Module)', () => {
     fireEvent.click(clearBtn);
     expect(dispatch).toHaveBeenCalledWith({ type: 'CLEAR_FRAME' });
 
-    // Fill 5
+    // Fill 5: exactly five placements across slots 0-4
     const fill5Btn = screen.getByRole('button', { name: /fill 5/i });
     fireEvent.click(fill5Btn);
-    expect(dispatch).toHaveBeenCalledWith({
-      type: 'PLACE_COUNTER',
-      slotIndex: 0,
-      color: 'red',
-    });
+    const placeCalls = dispatch.mock.calls.filter(
+      ([action]) => action.type === 'PLACE_COUNTER'
+    );
+    expect(placeCalls).toHaveLength(5);
+    expect(placeCalls.map(([action]) => action.slotIndex)).toEqual([0, 1, 2, 3, 4]);
+    expect(placeCalls.every(([action]) => action.color === 'red')).toBe(true);
 
     // Toggle capacity
     const toggleBtn = screen.getByRole('button', { name: /switch to double/i });
@@ -103,5 +104,11 @@ describe('ManipulativeWorkbench (Deep Manipulative Module)', () => {
       slotIndex: 0,
       color: 'black',
     });
+
+    // Tray color selection is surfaced through onSelectColor
+    fireEvent.click(screen.getByRole('button', { name: 'Select and Add Red Counter' }));
+    expect(onSelectColor).toHaveBeenCalledWith('red');
+    fireEvent.click(screen.getByRole('button', { name: 'Select and Add Black Counter' }));
+    expect(onSelectColor).toHaveBeenCalledWith('black');
   });
 });

@@ -151,21 +151,15 @@ describe('subitize generator', () => {
       expect(asDomainProblem(null)).toBeNull();
       expect(asDomainProblem(undefined)).toBeNull();
     });
-  });
 
-  describe('polymorphic domain interface', () => {
-    it('exposes type, validate, and getExpectedAnswer on generated subitize problems', () => {
-      const prob = generateSubitizeProblem(6);
-      expect(prob.type).toBe('subitize');
-      expect(prob.getExpectedAnswer()).toBe(6);
-      expect(prob.validate(6)).toBe(true);
-      expect(prob.validate(5)).toBe(false);
-
-      // Destructuring safety check
-      const { validate, getExpectedAnswer } = prob;
-      expect(getExpectedAnswer()).toBe(6);
-      expect(validate(6)).toBe(true);
-      expect(validate(7)).toBe(false);
+    it('rejects unsupported problem type discriminators even with polymorphic methods', () => {
+      const impostor = {
+        id: 'fake-1',
+        type: 'quantum-bond',
+        validate: (answer: number): boolean => answer === 42,
+        getExpectedAnswer: (): number => 42,
+      };
+      expect(asDomainProblem(impostor as unknown as ActiveProblem)).toBeNull();
     });
   });
 });

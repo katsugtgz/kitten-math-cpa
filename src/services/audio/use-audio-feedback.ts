@@ -4,9 +4,10 @@ import type { AudioPort } from './audio-port';
 
 export interface UseAudioFeedbackOptions {
   /**
-   * Whether to reactively observe concrete counter grid placements and removals.
-   * In Milestone 3, set to false in App to prevent duplicate sounds while ConcreteModeView
-   * retains its internal sound triggers until Milestone 4.
+   * Whether to reactively observe concrete counter grid changes.
+   * App wires the default (true): placements, removals, drag-moves, and
+   * recolor drops all chime from this hook; views stay audio-free.
+   * Set to false to silence only the counter cues (tests, focused sessions).
    * Default: true.
    */
   readonly observeCounters?: boolean;
@@ -49,16 +50,16 @@ export function useAudioFeedback(
       audio.playCelebrationFanfare();
     }
 
-    // 3. Card flip sound on problem progression (id change)
+    // 3. Card flip sound on problem progression (id change or first problem)
     if (
       state.activeProblem &&
-      prev.activeProblem &&
-      state.activeProblem.id !== prev.activeProblem.id
+      (prev.activeProblem === null ||
+        state.activeProblem.id !== prev.activeProblem.id)
     ) {
       audio.playCardFlip();
     }
 
-    // 4. Concrete counter placement and removal
+    // 4. Concrete counter placement, removal, drag-move, and recolor
     if (
       observeCounters &&
       state.mode === 'concrete' &&
@@ -70,6 +71,17 @@ export function useAudioFeedback(
         audio.playCounterPlace(isRed);
       } else if (state.grid.totalCount < prev.grid.totalCount) {
         audio.playCounterRemove();
+      } else if (state.grid.cells !== prev.grid.cells) {
+        // Same total: a drag-move or a recolor drop onto an occupied slot.
+        // Chime with the color of the first slot that changed to non-empty.
+        const nextCells = state.grid.cells;
+        const prevCells = prev.grid.cells;
+        const changedIndex = nextCells.findIndex(
+          (cell, i) => cell !== 'empty' && cell !== prevCells[i]
+        );
+        if (changedIndex !== -1) {
+          audio.playCounterPlace(nextCells[changedIndex] === 'red');
+        }
       }
     }
   }, [state, audio, observeCounters]);
