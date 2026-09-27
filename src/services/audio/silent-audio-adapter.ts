@@ -84,4 +84,9 @@ export class SilentAudioAdapter implements AudioPort {
     this.calls.playButtonClick = 0;
     this.calls.triggerHaptic = [];
   }
+
+  /** Headless adapter holds no resources; dispose is a recording no-op. */
+  public dispose(): void {
+    // no-op
+  }
 }

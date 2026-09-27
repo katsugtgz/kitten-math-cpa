@@ -60,4 +60,11 @@ export interface AudioPort {
    * Inspect current mute status.
    */
   getMuted(): boolean;
+
+  /**
+   * Release adapter-held resources (window listeners, AudioContext).
+   * Part of the port contract so consumers holding an AudioPort can clean up.
+   * Safe to call multiple times; playback after dispose reinitializes lazily.
+   */
+  dispose(): void;
 }
